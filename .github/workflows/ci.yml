@@ -80,7 +80,19 @@ jobs:
         working-directory: Unified
         run: |
           set -o pipefail
-          make package FINALPACKAGE=1 2>&1 | tee build.log
+          # messages=yes prints full compiler/linker commands so the
+          # per-architecture -target flags can be reported below.
+          make package FINALPACKAGE=1 messages=yes 2>&1 | tee build.log
+
+      - name: Report per-architecture target flags
+        if: always()
+        continue-on-error: true
+        working-directory: Unified
+        run: |
+          [ -f build.log ] || exit 0
+          t=$(grep -oE -- '-target [a-z0-9_]+-apple-ios[0-9.]+' build.log | sort | uniq -c)
+          echo "$t"
+          echo "::notice title=clang -target flags (count, flag)::$(echo "$t" | awk 'BEGIN{ORS="%0A"}{print}')"
 
       - name: Report build failure
         if: failure()
@@ -111,29 +123,22 @@ jobs:
           DEB=$(ls packages/*.deb | head -n 1)
           mkdir -p /tmp/deb && dpkg-deb -x "$DEB" /tmp/deb
           DYLIB=$(find /tmp/deb -name 'Unified.dylib' | head -n 1)
-          BIN="$THEOS/toolchain/linux/iphone/bin"
-          OTOOL=$(ls "$BIN"/otool "$BIN"/llvm-otool "$BIN"/llvm-objdump 2>/dev/null | head -n 1)
-          MINOS=""
-          if [ -n "$OTOOL" ]; then
-            for ARCH in armv7 arm64; do
-              case "$OTOOL" in
-                *objdump) V=$("$OTOOL" --macho --private-headers --arch-name="$ARCH" "$DYLIB" 2>&1 | grep -A3 -E 'LC_VERSION_MIN_IPHONEOS|LC_BUILD_VERSION' | grep -E '^ *(version|minos) ' | head -n 1 || true) ;;
-                *) V=$("$OTOOL" -arch "$ARCH" -l "$DYLIB" 2>&1 | grep -A3 -E 'LC_VERSION_MIN_IPHONEOS|LC_BUILD_VERSION' | grep -E '^ *(version|minos) ' | head -n 1 || true) ;;
-              esac
-              MINOS="$MINOS$ARCH: $(echo "$V" | xargs)"$'\n'
-            done
-          fi
+          # Read the minimum iOS version from each slice's load commands
+          # directly (tools/macho_minos.py), not via toolchain utilities.
+          MINOS=$(python3 tools/macho_minos.py "$DYLIB")
+          THIN=$(for f in $(find .theos -path '*/obj/*' -name Unified.dylib | sort); do echo "$f -> $(python3 tools/macho_minos.py "$f" | tr '\n' ' ')"; done)
           {
             echo "deb: $(basename "$DEB") ($(stat -c %s "$DEB") bytes)"
             echo "members: $(ar t "$DEB" | tr '\n' ' ')"
             dpkg-deb -f "$DEB" Package Version Architecture Depends
             echo "files:"; dpkg-deb -c "$DEB" | awk '{print "  " $6}'
             echo "dylib: $(file -b "$DYLIB")"
-            echo "min OS (via $(basename "${OTOOL:-none}")):"; echo "$MINOS" | sed 's/^/  /'
+            echo "min OS per slice:"; echo "$MINOS" | sed 's/^/  /'
+            echo "per-arch build outputs before lipo:"; echo "$THIN" | sed 's/^/  /'
           } > package-info.txt
           cat package-info.txt
           echo "::notice title=package info::$(sed -e 's/%/%25/g' package-info.txt | awk 'BEGIN{ORS="%0A"}{print}')"
-          printf '%s' "$MINOS" > minos.txt
+          printf '%s\n' "$MINOS" > minos.txt
 
       - uses: actions/upload-artifact@v4
         with:
