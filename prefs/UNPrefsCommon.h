@@ -5,7 +5,8 @@
  * add a Settings pane through PreferenceLoader. Only long-standing
  * PSSpecifier/PSListController API is used (see docs/PRIVATE_APIS.md).
  * Specifiers are built in code rather than from plists so behaviour is the
- * same on iOS 5-10.
+ * same on iOS 5-10. `specifiers` returns NSMutableArray to match the
+ * `_specifiers` ivar and property type in PSListController.h.
  *
  * Every read and write goes through UNPreferences on the settings file
  * directly. The pane re-reads the file before each change, so it never
@@ -17,6 +18,13 @@
 #import <Preferences/PSSpecifier.h>
 
 #import "UNPreferences.h"
+
+/* Present in Preferences.framework since well before iOS 5, but not
+ * declared in Theos's PSSpecifier.h (theos/headers 25ef5c9). Sets the
+ * values and titles a PSLinkListCell offers in PSListItemsController. */
+@interface PSSpecifier (UNDeclarations)
+- (void)setValues:(NSArray *)values titles:(NSArray *)titles;
+@end
 
 /* Specifier property keys used inside the pane. */
 #define UNSpecifierKey @"UNKey"

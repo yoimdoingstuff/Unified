@@ -36,7 +36,7 @@
     return specifier;
 }
 
-- (NSArray *)specifiers
+- (NSMutableArray *)specifiers
 {
     if (_specifiers == nil) {
         NSMutableArray *specifiers = [NSMutableArray array];
@@ -100,7 +100,7 @@
                 @"Couldn't read the list of installed apps on this iOS version.")];
         }
 
-        _specifiers = [specifiers copy];
+        _specifiers = [specifiers retain];
     }
     return _specifiers;
 }

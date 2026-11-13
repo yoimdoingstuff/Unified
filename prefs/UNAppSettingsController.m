@@ -18,7 +18,7 @@
     return [identifier isKindOfClass:[NSString class]] ? identifier : nil;
 }
 
-- (NSArray *)specifiers
+- (NSMutableArray *)specifiers
 {
     if (_specifiers == nil) {
         NSMutableArray *specifiers = [NSMutableArray array];
@@ -32,7 +32,7 @@
 
         if (identifier == nil) {
             [specifiers addObject:UNGroupSpecifier(nil, @"This app could not be identified.")];
-            _specifiers = [specifiers copy];
+            _specifiers = [specifiers retain];
             return _specifiers;
         }
 
@@ -66,7 +66,7 @@
                                  @"Fit", @"Fill", @"Stretch", nil]];
         [specifiers addObject:specifier];
 
-        _specifiers = [specifiers copy];
+        _specifiers = [specifiers retain];
     }
     return _specifiers;
 }

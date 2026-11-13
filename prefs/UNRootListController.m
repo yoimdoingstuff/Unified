@@ -13,7 +13,7 @@
 
 @implementation UNRootListController
 
-- (NSArray *)specifiers
+- (NSMutableArray *)specifiers
 {
     if (_specifiers == nil) {
         NSMutableArray *specifiers = [NSMutableArray array];
@@ -66,7 +66,7 @@
             @"adaptation is not implemented yet: switching an app on has no visible effect "
             @"in this version.")];
 
-        _specifiers = [specifiers copy];
+        _specifiers = [specifiers retain];
     }
     return _specifiers;
 }

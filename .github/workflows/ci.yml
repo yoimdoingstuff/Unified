@@ -28,11 +28,21 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - name: Unit tests
-        run: make -C tests CC=${{ matrix.cc }}
+        run: |
+          set -o pipefail
+          make -C tests CC=${{ matrix.cc }} 2>&1 | tee tests.log
       - name: Unit tests with sanitizers
         run: |
+          set -o pipefail
           make -C tests clean
-          make -C tests CC=${{ matrix.cc }} EXTRA_CFLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all"
+          make -C tests CC=${{ matrix.cc }} EXTRA_CFLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all" 2>&1 | tee tests.log
+      - name: Report test failure
+        # Job logs need a GitHub sign-in; annotations are public.
+        if: failure()
+        run: |
+          [ -f tests.log ] || exit 0
+          echo "::error title=${{ matrix.os }} ${{ matrix.cc }} diagnostics::$(grep -E 'error:|warning:|CHECK failed|FAILED|expected' tests.log | head -n 30 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          echo "::error title=${{ matrix.os }} ${{ matrix.cc }} log tail::$(tail -n 25 tests.log | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
 
   tweak-build:
     # Linux: the Theos Linux toolchain still links armv7; recent Xcode does not.
@@ -80,19 +90,7 @@ jobs:
         working-directory: Unified
         run: |
           set -o pipefail
-          # messages=yes prints full compiler/linker commands so the
-          # per-architecture -target flags can be reported below.
-          make package FINALPACKAGE=1 messages=yes 2>&1 | tee build.log
-
-      - name: Report per-architecture target flags
-        if: always()
-        continue-on-error: true
-        working-directory: Unified
-        run: |
-          [ -f build.log ] || exit 0
-          t=$(grep -oE -- '-target [a-z0-9_]+-apple-ios[0-9.]+' build.log | sort | uniq -c)
-          echo "$t"
-          echo "::notice title=clang -target flags (count, flag)::$(echo "$t" | awk 'BEGIN{ORS="%0A"}{print}')"
+          make package FINALPACKAGE=1 2>&1 | tee build.log
 
       - name: Report build failure
         if: failure()
@@ -104,8 +102,10 @@ jobs:
           # error fits. %0A is a newline inside an annotation message.
           sed -e 's/\x1b\[[0-9;]*m//g' -e 's/\r//g' build.log \
             | grep -v "but linking in .tbd file" > build.filtered.log || true
-          echo "::error title=build log (filtered, last 40 lines)::$(tail -n 40 build.filtered.log | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
-          echo "::error title=build log (error lines)::$(grep -inE 'error|undefined|not found|unknown|unsupported' build.filtered.log | tail -n 25 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          # Diagnostics only (file:line: error:), with the line after each for
+          # the offending source; Theos passes -Werror, so warnings count.
+          echo "::error title=build diagnostics::$(grep -E -A2 '(error|warning): ' build.filtered.log | head -n 45 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          echo "::error title=build log (last 25 lines)::$(tail -n 25 build.filtered.log | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
 
       - name: Report build warnings
         if: success()
