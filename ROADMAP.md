@@ -10,7 +10,7 @@ Unified is in **planning / research**. These milestones are goals, not claims of
 - [ ] Research where iOS applies iPhone-on-iPad compatibility scaling, and the install-time block on iPad-only apps on iPhone.
 - [ ] Choose the first jailbreak and injection environment.
 - [x] Confirm Theos toolchain support. *(Theos + L1ghtmann Linux toolchain + iPhoneOS 10.3 SDK builds armv7 in CI; see docs/DEVELOPMENT.md.)*
-- [x] Confirm the single universal package builds. *(Built on e713149: armv7 + arm64 in one dylib. The arm64 minimum is now set to 7.0 explicitly; CI checks it.)*
+- [x] Confirm the single universal package builds. *(Built on e713149: armv7 + arm64 in one dylib. Setting the arm64 minimum to 7.0 is in progress; CI checks it.)*
 - [ ] Research UIKit geometry, trait collections, screen modes, and Core Animation on the target OS.
 - [ ] Build a compatibility matrix of representative iPhone-only and iPad-only apps.
 
