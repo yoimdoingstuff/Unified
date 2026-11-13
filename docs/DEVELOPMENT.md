@@ -40,6 +40,7 @@ Build history:
 - `c77d707`: the Makefile switched to Theos's per-architecture variables (`TARGET_OS_DEPLOYMENT_VERSION` = 5.0, `TARGET_OS_DEPLOYMENT_VERSION_arm64` = 7.0) and left the version out of `TARGET`, which would otherwise take precedence. The CI check still reported arm64 at 5.0, but that was a misreading by `llvm-objdump --arch-name`.
 - `8304012`: **universal package verified in CI.** clang received `-target armv7-apple-ios5.0` and `-target arm64-apple-ios7.0`. `tools/macho_minos.py` reads the final dylib's slices directly as armv7 5.0 and arm64 7.0. CI's "Check universal package" step now uses that script and fails unless those values match.
 - `a2223a6` / `0e5714f` (Settings pane): fixed two mismatches with Theos's Preferences headers (`specifiers` is `NSMutableArray`; `setValues:titles:` undeclared). armv7 then failed to link with `Undefined symbols: _objc_msgSend_stret`, the first struct-returning Objective-C call. Cause: the SDK stub omits armv7-only libobjc exports. Fixed by `tools/patch_sdk_armv7.py`.
+- `99725ad`: **all CI jobs pass.** Package 0.0.2 (46 KB) contains the tweak dylib, its filter plist, `UnifiedPrefs.bundle` (binary, Info.plist, three icon sizes) and the PreferenceLoader entry. Both Mach-O files are armv7 iOS 5.0 + arm64 iOS 7.0. The macOS preferences tests pass, with and without sanitizers.
 - The linker warns `building for iOS 5.0.0 is deprecated`. That is expected and harmless.
 
 `tests/Makefile` is deliberately separate from the Theos root `Makefile` so host tests never need the iOS SDK.
