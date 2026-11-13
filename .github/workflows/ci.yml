@@ -112,7 +112,8 @@ jobs:
         continue-on-error: true
         working-directory: Unified
         run: |
-          w=$(sed -e 's/\x1b\[[0-9;]*m//g' build.log | grep -i 'warning' | grep -v "but linking in .tbd file" | head -n 20)
+          # Match diagnostics ("warning:"), not command lines that mention warnings.
+          w=$(sed -e 's/\x1b\[[0-9;]*m//g' build.log | grep -E 'warning: ' | grep -v "but linking in .tbd file" | head -n 20)
           [ -n "$w" ] && echo "::warning title=build warnings::$(echo "$w" | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
           exit 0
 

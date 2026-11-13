@@ -34,8 +34,8 @@ Build history:
 - `87a2f5f`: first successful build, armv7 only, deployment target 8.0.
 - `e713149`: first universal build. One gzip-compressed `.deb` (10 KB) containing `Library/MobileSubstrate/DynamicLibraries/Unified.{dylib,plist}`, with the dylib holding armv7 + arm64 slices. Both slices were stamped with a minimum of iOS 5.0.
 - `f4fbde9`: build failed. Adding `-miphoneos-version-min=7.0` for arm64 conflicts with Theos's own `-target arm64-apple-ios5.0` (clang error `-Woverriding-t-option`).
-- `c77d707`: builds, but the check reported arm64 at 5.0 even though the link printed only one "deprecated" warning (two before). CI now reads each slice's version with `tools/macho_minos.py` (direct Mach-O parse) and logs the `-target` flag clang got per architecture, to tell a real problem from a misreading.
-- The Makefile uses Theos's per-architecture variables (`TARGET_OS_DEPLOYMENT_VERSION` = 5.0, `TARGET_OS_DEPLOYMENT_VERSION_arm64` = 7.0) and leaves the version out of `TARGET`, which would otherwise take precedence. CI's "Check universal package" step fails unless armv7 is 5.0 and arm64 is 7.0.
+- `c77d707`: the Makefile switched to Theos's per-architecture variables (`TARGET_OS_DEPLOYMENT_VERSION` = 5.0, `TARGET_OS_DEPLOYMENT_VERSION_arm64` = 7.0) and left the version out of `TARGET`, which would otherwise take precedence. The CI check still reported arm64 at 5.0, but that was a misreading by `llvm-objdump --arch-name`.
+- `8304012`: **universal package verified in CI.** clang received `-target armv7-apple-ios5.0` and `-target arm64-apple-ios7.0`. `tools/macho_minos.py` reads the final dylib's slices directly as armv7 5.0 and arm64 7.0. CI's "Check universal package" step now uses that script and fails unless those values match.
 - The linker warns `building for iOS 5.0.0 is deprecated`. That is expected and harmless.
 
 `tests/Makefile` is deliberately separate from the Theos root `Makefile` so host tests never need the iOS SDK.
