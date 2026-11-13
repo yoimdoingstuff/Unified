@@ -82,7 +82,21 @@ NSString *UNAppFamilyDescription(UNAppFamily family)
 {
     [_bundleIdentifier release];
     [_displayName release];
+    [_dataContainerPath release];
     [super dealloc];
+}
+
+- (NSString *)dataContainerPath
+{
+    return _dataContainerPath;
+}
+
+- (void)setDataContainerPath:(NSString *)path
+{
+    if (path != _dataContainerPath) {
+        [_dataContainerPath release];
+        _dataContainerPath = [path copy];
+    }
 }
 
 - (NSString *)bundleIdentifier
@@ -174,6 +188,19 @@ static NSString *UNStringFromSelector(id receiver, SEL selector)
         }
 
         info = [[UNAppInfo alloc] initWithBundleIdentifier:identifier displayName:name family:family];
+        {
+            /* iOS 8+: separate data container. iOS 7: the app's home is the
+             * directory that contains the .app bundle. */
+            id containerURL = UNObjectFromSelector(proxy, @selector(dataContainerURL));
+            if ([containerURL isKindOfClass:[NSURL class]]) {
+                [info setDataContainerPath:[(NSURL *)containerURL path]];
+            } else {
+                id bundleURL = UNObjectFromSelector(proxy, @selector(bundleURL));
+                if ([bundleURL isKindOfClass:[NSURL class]]) {
+                    [info setDataContainerPath:[[(NSURL *)bundleURL path] stringByDeletingLastPathComponent]];
+                }
+            }
+        }
         [result addObject:info];
         [info release];
     }
@@ -211,6 +238,17 @@ static NSString *UNStringFromSelector(id receiver, SEL selector)
                          displayName:name
                               family:UNAppFamilyFromDeviceFamilyValue(
                                          [(NSDictionary *)entry objectForKey:@"UIDeviceFamily"])];
+        {
+            /* "Container" is the app's home on iOS 5-7; fall back to the
+             * directory holding the .app ("Path"). */
+            id container = [(NSDictionary *)entry objectForKey:@"Container"];
+            id bundlePath = [(NSDictionary *)entry objectForKey:@"Path"];
+            if ([container isKindOfClass:[NSString class]]) {
+                [info setDataContainerPath:container];
+            } else if ([bundlePath isKindOfClass:[NSString class]]) {
+                [info setDataContainerPath:[(NSString *)bundlePath stringByDeletingLastPathComponent]];
+            }
+        }
         [result addObject:info];
         [info release];
     }

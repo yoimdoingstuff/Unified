@@ -26,9 +26,9 @@ Unified is in **planning / research**. These milestones are goals, not claims of
 
 ## Phase 2 - Geometry proof of concept
 - [x] Implement unit-tested Fit, Fill, and Stretch calculations. *(`Sources/UNGeometry.*`, `tests/test_geometry.c`. Host tests pass in CI; not yet exercised on iOS.)*
-- [ ] Identify app content bounds and coordinate spaces.
-- [ ] Prototype rendering adaptation in one direction.
-- [ ] Map touch coordinates back into the app's source coordinate space.
+- [ ] Identify app content bounds and coordinate spaces. *(From iOS 5.1–8.1 headers: classic presentation runs in the app via `UIWindow._transformLayer`; see TECHNICAL_DESIGN §2a. Needs device confirmation.)*
+- [ ] Prototype rendering adaptation in one direction. *(iPhone app → iPad, iOS 8+, portrait: implemented in 0.0.3, not yet run.)*
+- [ ] Map touch coordinates back into the app's source coordinate space. *(Scene-reference conversions hooked; unverified.)*
 - [ ] Test taps, swipes, scrolling, keyboard, and rotation.
 
 **Exit:** one simple app adapts in one direction with correct interaction.

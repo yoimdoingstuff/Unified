@@ -11,6 +11,7 @@ include $(THEOS)/makefiles/common.mk
 BUNDLE_NAME = UnifiedPrefs
 
 UnifiedPrefs_FILES = UNRootListController.m UNAppListController.m UNAppSettingsController.m \
+	UNDiagnosticsController.m \
 	../Sources/UNPreferences.m ../Sources/UNAppCatalog.m ../Sources/UNPolicy.c
 UnifiedPrefs_INSTALL_PATH = /Library/PreferenceBundles
 UnifiedPrefs_FRAMEWORKS = UIKit Foundation

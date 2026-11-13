@@ -62,9 +62,10 @@
         [specifiers addObject:specifier];
 
         [specifiers addObject:UNGroupSpecifier(@"Status",
-            @"Experimental. These settings are saved and read by the tweak, but display "
-            @"adaptation is not implemented yet: switching an app on has no visible effect "
-            @"in this version.")];
+            @"Experimental. iPhone apps running on an iPad are drawn with the chosen mode "
+            @"instead of the usual 1x/2x. This needs iOS 8 or later and only works in portrait "
+            @"for now; anything else is left as iOS normally shows it. iPad apps on iPhone are "
+            @"not supported yet. Each app's page has a diagnostics report showing what happened.")];
 
         _specifiers = [specifiers retain];
     }

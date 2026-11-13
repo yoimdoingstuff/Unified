@@ -22,6 +22,7 @@
 - (PSSpecifier *)un_specifierForIdentifier:(NSString *)identifier
                                       name:(NSString *)name
                                     family:(UNAppFamily)family
+                                 container:(NSString *)container
 {
     PSSpecifier *specifier = [PSSpecifier preferenceSpecifierNamed:name
                                                             target:self
@@ -33,6 +34,9 @@
     [specifier setProperty:identifier forKey:UNSpecifierBundleIdentifier];
     [specifier setProperty:name forKey:UNSpecifierDisplayName];
     [specifier setProperty:[NSNumber numberWithInt:(int)family] forKey:UNSpecifierFamily];
+    if (container != nil) {
+        [specifier setProperty:container forKey:UNSpecifierDataContainer];
+    }
     return specifier;
 }
 
@@ -53,7 +57,8 @@
         for (UNAppInfo *app in apps) {
             PSSpecifier *specifier = [self un_specifierForIdentifier:[app bundleIdentifier]
                                                                 name:[app displayName]
-                                                              family:[app family]];
+                                                              family:[app family]
+                                                           container:[app dataContainerPath]];
             [listedIdentifiers addObject:[app bundleIdentifier]];
             if ([app family] == primaryFamily) {
                 [primary addObject:specifier];
@@ -66,7 +71,8 @@
             if (![listedIdentifiers containsObject:identifier]) {
                 [unlisted addObject:[self un_specifierForIdentifier:identifier
                                                                 name:identifier
-                                                              family:UNAppFamilyUnknown]];
+                                                              family:UNAppFamilyUnknown
+                                                           container:nil]];
             }
         }
 

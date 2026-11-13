@@ -20,6 +20,28 @@ Test Fit, Fill, and Stretch independently from UIKit:
 
 `tests/test_preferences.m` covers `UNPreferences` and the UIDeviceFamily parser in `UNAppCatalog`: missing, malformed and wrong-type files load as "off"; save/reload round trip in the documented format; validation of modes and bundle IDs; unknown keys preserved. It needs Foundation, so it runs only on macOS (the macOS `host-tests` CI job).
 
+## Troubleshooting: no Unified row in Settings
+
+Reported on 0.0.2 (iPad mini, iOS 8.4.1). Check in this order:
+1. **PreferenceLoader installed?** Cydia → Installed → look for "PreferenceLoader". A `.deb` installed with Filza or `dpkg -i` does not install dependencies automatically, and without PreferenceLoader the Unified row never appears. Install it from Cydia (BigBoss repo).
+2. **Settings fully restarted?** Close Settings from the app switcher (double-press Home, swipe it up) and open it again. A respring also works.
+3. **Right version?** Cydia → Installed → Unified should show 0.0.2 or later. 0.0.1 had no Settings pane.
+4. **Files present?** In Filza: `/Library/PreferenceLoader/Preferences/Unified.plist` and `/Library/PreferenceBundles/UnifiedPrefs.bundle/`.
+
+Fallback without the pane: create `/var/mobile/Library/Preferences/com.yoimdoingstuff.unified.plist` in Filza (it can edit plists), using `Resources/example-preferences.plist` as the template.
+
+## Device test: scaling (0.0.3, experimental)
+
+1. In Settings → Unified, turn on **Enabled**, open Choose Apps, pick an **iPhone-only** app, turn on **Use Unified**, leave Mode on Default (Fit).
+2. Close the app fully from the app switcher, then open it. Hold the iPad in portrait.
+3. Expected: the app is taller than iOS's normal 2× view and fills the screen top to bottom, with narrow black bars left and right.
+4. Tap buttons near each corner and in the middle, scroll a list, and type in a text field. Expected: taps land where you touch.
+5. Open Settings → Unified → the app → View Report. Expected: "Unified loaded in this app", "Classic (compatibility) mode: yes", a window line starting "SCALED fit", and non-zero conversion counts after tapping.
+6. Try Fill and Stretch (close and reopen the app after each change).
+7. Turn the app off in Settings, close and reopen it. Expected: back to normal 1×/2×.
+
+Record what you see, especially any window line that says "not scaled", and whether taps are offset.
+
 ## Device test: Settings pane (no SSH needed)
 
 Goal: show the pane works and saves settings. Not run yet.

@@ -12,7 +12,12 @@ Keep this list synchronized with [ROADMAP.md](ROADMAP.md).
 - [x] Set up and verify Theos. *(In CI on Linux; no local build environment.)*
 - [x] Build the minimal Logos tweak that logs in enabled apps without modifying behaviour. *(CI)*
 - [x] Install the package on the iPad mini. *(0.0.1~poc1 via Cydia; owner report.)*
+- [ ] Fix: Settings row missing on iPad mini with 0.0.2 (check PreferenceLoader first; docs/TESTING.md troubleshooting).
 - [ ] Run the Settings-pane device test in docs/TESTING.md (no SSH needed).
+- [ ] Run the scaling device test (0.0.3) and read the diagnostics report.
+- [ ] Scaling: landscape support (UIKit's transform is rotated there; currently skipped).
+- [ ] Scaling: iOS 5–7 touch path (no scene-reference conversions).
+- [ ] Scaling: hide or move the 1×/2× button when Unified scales the app.
 - [ ] Observe the tweak actually loading in an app. *(Needs either the device log or the first visible feature.)*
 - [x] Add geometry tests for Fit, Fill, and Stretch. *(`tests/test_geometry.c`)*
 - [x] Confirm host tests pass in the `ci` workflow's `host-tests` job. *(Passed 2026-11-13 on commit 43d9b9a: gcc and clang on ubuntu-latest, clang on macos-latest, each with and without ASan/UBSan.)*

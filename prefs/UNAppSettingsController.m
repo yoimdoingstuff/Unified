@@ -7,6 +7,9 @@
 #import "UNPrefsCommon.h"
 #import "UNAppCatalog.h"
 
+@interface UNDiagnosticsController : PSListController
+@end
+
 @interface UNAppSettingsController : PSListController
 @end
 
@@ -64,6 +67,24 @@
                       titles:[NSArray arrayWithObjects:
                                  [NSString stringWithFormat:@"Default (%@)", UNModeTitle(defaultMode)],
                                  @"Fit", @"Fill", @"Stretch", nil]];
+        [specifiers addObject:specifier];
+
+        [specifiers addObject:UNGroupSpecifier(@"Diagnostics",
+            @"What Unified found and did the last time this app ran. Open the app after "
+            @"switching Unified on to create a report.")];
+        specifier = [PSSpecifier preferenceSpecifierNamed:@"View Report"
+                                                   target:self
+                                                      set:NULL
+                                                      get:NULL
+                                                   detail:[UNDiagnosticsController class]
+                                                     cell:PSLinkCell
+                                                     edit:Nil];
+        {
+            id container = [[self specifier] propertyForKey:UNSpecifierDataContainer];
+            if (container != nil) {
+                [specifier setProperty:container forKey:UNSpecifierDataContainer];
+            }
+        }
         [specifiers addObject:specifier];
 
         _specifiers = [specifiers retain];

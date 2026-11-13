@@ -40,6 +40,7 @@ NSString *UNAppFamilyDescription(UNAppFamily family);
     NSString *_bundleIdentifier;
     NSString *_displayName;
     UNAppFamily _family;
+    NSString *_dataContainerPath;
 }
 - (instancetype)initWithBundleIdentifier:(NSString *)bundleIdentifier
                              displayName:(NSString *)displayName
@@ -47,6 +48,9 @@ NSString *UNAppFamilyDescription(UNAppFamily family);
 - (NSString *)bundleIdentifier;
 - (NSString *)displayName;
 - (UNAppFamily)family;
+/* The app's home directory (where its diagnostics report is), or nil. */
+- (NSString *)dataContainerPath;
+- (void)setDataContainerPath:(NSString *)path;
 @end
 
 @interface UNAppCatalog : NSObject

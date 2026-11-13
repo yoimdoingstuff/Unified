@@ -219,6 +219,11 @@ static void testAppInfo(void)
                                                            family:UNAppFamilyiPhone];
     CHECK([[info displayName] isEqualToString:@"com.example.app"]); /* falls back to the bundle ID */
     CHECK([info family] == UNAppFamilyiPhone);
+    CHECK([info dataContainerPath] == nil);
+    [info setDataContainerPath:@"/var/mobile/Containers/Data/Application/X"];
+    CHECK([[info dataContainerPath] isEqualToString:@"/var/mobile/Containers/Data/Application/X"]);
+    [info setDataContainerPath:nil];
+    CHECK([info dataContainerPath] == nil);
     [info release];
 }
 

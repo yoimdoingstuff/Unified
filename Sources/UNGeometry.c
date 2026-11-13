@@ -177,6 +177,37 @@ bool UNTransformMapDestinationPointToSource(UNTransform transform, UNRect source
         && mapped.y >= sourceContent.y && mapped.y <= sourceContent.y + sourceContent.height;
 }
 
+bool UNSolveRootLayerTransform(UNTransform target, UNPoint layerPosition, UNPoint layerAnchor,
+                               UNPoint contentOrigin, UNTransform *outLayerTransform)
+{
+    UNTransform result;
+
+    if (outLayerTransform == NULL) {
+        return false;
+    }
+    *outLayerTransform = UNTransformIdentity;
+
+    if (!UNTransformIsValid(target)
+        || !isfinite(layerPosition.x) || !isfinite(layerPosition.y)
+        || !isfinite(layerAnchor.x) || !isfinite(layerAnchor.y)
+        || !isfinite(contentOrigin.x) || !isfinite(contentOrigin.y)) {
+        return false;
+    }
+
+    result.scaleX = target.scaleX;
+    result.scaleY = target.scaleY;
+    result.translateX = target.translateX - layerPosition.x
+                      - target.scaleX * (contentOrigin.x - layerAnchor.x);
+    result.translateY = target.translateY - layerPosition.y
+                      - target.scaleY * (contentOrigin.y - layerAnchor.y);
+
+    if (!UNTransformIsValid(result)) {
+        return false;
+    }
+    *outLayerTransform = result;
+    return true;
+}
+
 bool UNTransformVisibleSourceRect(UNTransform transform, UNRect source, UNRect destination,
                                   UNRect *outVisibleSource)
 {

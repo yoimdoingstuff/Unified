@@ -141,6 +141,31 @@ bool UNTransformMapDestinationPointToSource(UNTransform transform, UNRect source
 bool UNTransformVisibleSourceRect(UNTransform transform, UNRect source, UNRect destination,
                                   UNRect *outVisibleSource);
 
+/*
+ * Root-layer solve, used to place app content with Core Animation.
+ *
+ * A layer L draws a point q (in L's own coordinates) at
+ *
+ *     scene = position + T(q - anchor)
+ *
+ * where `anchor` is L's anchor point in its own coordinates
+ * (bounds.origin + anchorPoint * bounds.size) and T is L.transform. App
+ * content point p (window coordinates) sits at q = contentOrigin + p inside L.
+ *
+ * Given the desired content->scene mapping `target` (from
+ * UNTransformMake), this computes the L.transform (scale + translation)
+ * that makes  scene = target(p)  for every p:
+ *
+ *     T.scale = target.scale
+ *     T.translate = target.translate - position - target.scale * (contentOrigin - anchor)
+ *
+ * Valid only when L's superlayer (if any) does not move or scale it, i.e.
+ * L.position is already in scene coordinates. The caller checks that.
+ * Returns false (identity output) for invalid input.
+ */
+bool UNSolveRootLayerTransform(UNTransform target, UNPoint layerPosition, UNPoint layerAnchor,
+                               UNPoint contentOrigin, UNTransform *outLayerTransform);
+
 #ifdef __cplusplus
 }
 #endif

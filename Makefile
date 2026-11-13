@@ -35,7 +35,7 @@ TWEAK_NAME = Unified
 
 Unified_FILES = Tweak.x Sources/UNGeometry.c Sources/UNPolicy.c Sources/UNPreferences.m
 Unified_CFLAGS = -ISources -Wall -Wextra -Wunguarded-availability
-Unified_FRAMEWORKS = Foundation
+Unified_FRAMEWORKS = Foundation UIKit QuartzCore
 
 include $(THEOS_MAKE_PATH)/tweak.mk
 

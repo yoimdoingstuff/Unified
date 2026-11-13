@@ -42,6 +42,22 @@ Test:
 
 A visual transform without correct input mapping is not a working implementation.
 
+## 2a. Classic-mode scaling (implemented, experimental, untested on device)
+
+**Research (class-dump headers, iOS 5.0–8.1):** iPhone apps on iPad run in *classic* mode. SpringBoard decides whether an app is classic (`SBApplication -isClassic` on iOS 6/7, `-_classicMode` from `-_classicModeFromSupportedTypes` on iOS 8.1), but the 1×/2× presentation happens **inside the app's own UIKit**:
+- Every `UIWindow` has a private `_transformLayer` (iOS 5.1–8.1).
+- `-_updateTransformLayerForClassicPresentation` configures it for the zoom level; iOS 8.1 adds `-_updateTransformLayerSizeForClassicPresentation`.
+- `UIClassicController` owns the 1×/2× button and black surround (its own window).
+- iOS 8 converts between window and screen ("scene reference space") with `-_convertPointFromSceneReferenceSpace:` and related methods.
+
+**Design (`Tweak.x`):**
+1. Hook both update methods. After UIKit runs, if the app is classic and the layer tree is as expected (window layer directly inside `_transformLayer`, transform layer at scene coordinates, UIKit's transform unrotated), compute the target mapping with `UNTransformMake(window.bounds → _sceneReferenceBounds, mode)`.
+2. Turn that mapping into a layer transform with `UNSolveRootLayerTransform`: Core Animation draws q at `position + T(q − anchor)`, so `T.translate = target.translate − position − scale·(contentOrigin − anchor)`. This is host-tested by simulating that formula.
+3. Hook the scene-reference conversions so screen↔window conversions (expected to include touches) use exactly the same mapping and its inverse.
+4. Anything unexpected leaves UIKit's transform in place and records why.
+
+**Known limits of this first version:** iOS 8+ only (the conversion methods don't exist earlier); portrait only (rotated transforms are skipped); the 1×/2× button may overlap scaled content; Fill crops without any way to pan; touch mapping through these methods is an assumption to verify on the device.
+
 ## 3. UIKit behaviour
 
 Investigate on the selected target:

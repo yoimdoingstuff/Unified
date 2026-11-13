@@ -427,6 +427,84 @@ static void testVisibleSourceRect(void)
     CHECK(!UNTransformVisibleSourceRect(t, src, UNRectMake(0, 0, 0, 0), &visible));
 }
 
+/* Core Animation's placement of point q in a root layer: position + T(q - anchor). */
+static UNPoint simulateRootLayer(UNTransform layerTransform, UNPoint position, UNPoint anchor,
+                                 UNPoint contentOrigin, UNPoint p)
+{
+    UNPoint q = UNPointMake(contentOrigin.x + p.x - anchor.x, contentOrigin.y + p.y - anchor.y);
+    UNPoint t = UNTransformApplyToPoint(layerTransform, q);
+    return UNPointMake(position.x + t.x, position.y + t.y);
+}
+
+static void testSolveRootLayerTransform(void)
+{
+    /* Several plausible transform-layer setups: anchor centred or at the
+     * origin, layer offset in the scene, content offset inside the layer. */
+    struct {
+        UNPoint position, anchor, contentOrigin;
+    } layers[] = {
+        { { 160, 240 }, { 160, 240 }, { 0, 0 } },     /* 320x480 layer at scene origin */
+        { { 384, 512 }, { 160, 240 }, { 0, 0 } },     /* centred on a 768x1024 scene */
+        { { 384, 512 }, { 384, 512 }, { 224, 272 } }, /* full-screen layer, content centred */
+        { { 0, 0 }, { 0, 0 }, { 0, 0 } },             /* anchor (0,0) */
+        { { 10.5, -3 }, { 7, 9 }, { -4, 2.25 } },     /* arbitrary */
+    };
+    UNRect src = UNRectMake(0, 0, 320, 480);
+    UNRect dst = UNRectMake(0, 0, 768, 1024);
+    UNScaleMode modes[] = { UNScaleModeFit, UNScaleModeFill, UNScaleModeStretch };
+    UNPoint probes[] = { { 0, 0 }, { 320, 480 }, { 160, 240 }, { 13, 467 }, { -5, 500 } };
+    size_t l, m, k;
+
+    for (l = 0; l < sizeof(layers) / sizeof(layers[0]); l++) {
+        for (m = 0; m < sizeof(modes) / sizeof(modes[0]); m++) {
+            UNTransform target;
+            UNTransform layerTransform;
+
+            CHECK(UNTransformMake(src, dst, modes[m], &target));
+            CHECK(UNSolveRootLayerTransform(target, layers[l].position, layers[l].anchor,
+                                            layers[l].contentOrigin, &layerTransform));
+            CHECK_NEAR(layerTransform.scaleX, target.scaleX);
+            CHECK_NEAR(layerTransform.scaleY, target.scaleY);
+
+            for (k = 0; k < sizeof(probes) / sizeof(probes[0]); k++) {
+                UNPoint expected = UNTransformApplyToPoint(target, probes[k]);
+                UNPoint actual = simulateRootLayer(layerTransform, layers[l].position,
+                                                   layers[l].anchor, layers[l].contentOrigin,
+                                                   probes[k]);
+                CHECK_NEAR(actual.x, expected.x);
+                CHECK_NEAR(actual.y, expected.y);
+            }
+        }
+    }
+
+    /* Fit on the first target: content spans x 42.67..725.33, y 0..1024. */
+    {
+        UNTransform target;
+        UNTransform layerTransform;
+        UNPoint corner;
+        CHECK(UNTransformMake(src, dst, UNScaleModeFit, &target));
+        CHECK(UNSolveRootLayerTransform(target, UNPointMake(384, 512), UNPointMake(160, 240),
+                                        UNPointMake(0, 0), &layerTransform));
+        corner = simulateRootLayer(layerTransform, UNPointMake(384, 512), UNPointMake(160, 240),
+                                   UNPointMake(0, 0), UNPointMake(320, 480));
+        CHECK_NEAR(corner.x, 768.0 - 128.0 / 3.0);
+        CHECK_NEAR(corner.y, 1024.0);
+    }
+
+    /* Invalid input. */
+    {
+        UNTransform bad = { 0.0, 1.0, 0.0, 0.0 };
+        UNTransform out = { 9, 9, 9, 9 };
+        CHECK(!UNSolveRootLayerTransform(bad, UNPointMake(0, 0), UNPointMake(0, 0),
+                                         UNPointMake(0, 0), &out));
+        CHECK(out.scaleX == 1.0 && out.translateX == 0.0);
+        CHECK(!UNSolveRootLayerTransform(UNTransformIdentity, UNPointMake(NAN, 0),
+                                         UNPointMake(0, 0), UNPointMake(0, 0), &out));
+        CHECK(!UNSolveRootLayerTransform(UNTransformIdentity, UNPointMake(0, 0),
+                                         UNPointMake(0, 0), UNPointMake(0, 0), NULL));
+    }
+}
+
 int main(void)
 {
     testIPhoneOnIPadPortrait();
@@ -441,6 +519,7 @@ int main(void)
     testInputMapping();
     testIntersection();
     testVisibleSourceRect();
+    testSolveRootLayerTransform();
 
     if (gFailures != 0) {
         fprintf(stderr, "test_geometry: %d of %d checks FAILED\n", gFailures, gChecks);

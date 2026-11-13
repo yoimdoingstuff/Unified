@@ -31,6 +31,7 @@
 #define UNSpecifierBundleIdentifier @"UNBundleIdentifier"
 #define UNSpecifierDisplayName @"UNDisplayName"
 #define UNSpecifierFamily @"UNFamily"
+#define UNSpecifierDataContainer @"UNDataContainer"
 
 /* Value shown for "follow the default mode" in the per-app mode list. */
 #define UNModeDefaultValue @"default"

@@ -8,7 +8,7 @@ Unified is intended to operate locally on a jailbroken device.
 - Do not read app documents or credentials.
 - Do not store device identifiers without a clearly justified need.
 - Keep debug logs opt-in and avoid sensitive values.
-- Store only configuration preferences.
+- Store only configuration preferences, plus a small per-app diagnostics report (geometry and state only, no app content) kept inside that app's own container and shown in Settings. It is never sent anywhere; Copy Report only puts it on the clipboard when the user taps it.
 - HD texture packs (planned) are untrusted input: read them only from Unified's own pack directory, enforce size and format limits before decoding, and never execute content from a pack. Do not distribute or commit proprietary app assets.
 - Do not weaken iOS security controls beyond what the jailbreak environment already requires.
 

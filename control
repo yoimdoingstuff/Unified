@@ -1,8 +1,8 @@
 Package: com.yoimdoingstuff.unified
 Name: Unified
-Version: 0.0.2
+Version: 0.0.3
 Architecture: iphoneos-arm
-Description: Experimental. Adapts iPhone apps to iPad displays (and later the reverse). Settings > Unified lets you pick apps and modes; display adaptation itself is not implemented yet.
+Description: Experimental. Scales iPhone apps to fill iPad displays (Fit, Fill or Stretch) on iOS 8+. Pick apps in Settings > Unified.
 Maintainer: yoimdoingstuff
 Author: yoimdoingstuff
 Section: Tweaks
