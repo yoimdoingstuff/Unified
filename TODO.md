@@ -13,7 +13,8 @@ Keep this list synchronized with [ROADMAP.md](ROADMAP.md).
 - [ ] Build the minimal Logos tweak (`Tweak.x`, written) that logs in enabled apps without modifying behaviour.
 - [ ] Run the Phase 1 device test in docs/TESTING.md.
 - [x] Add geometry tests for Fit, Fill, and Stretch. *(`tests/test_geometry.c`)*
-- [ ] Confirm host tests pass on a build host (`make -C tests`) and in the `ci` workflow's `host-tests` job. Written on a machine without a C compiler; not yet run.
+- [x] Confirm host tests pass in the `ci` workflow's `host-tests` job. *(Passed 2026-11-13 on commit 43d9b9a: gcc and clang on ubuntu-latest, clang on macos-latest, each with and without ASan/UBSan.)*
+- [ ] Get the `tweak-build` CI job passing. *(First run failed in the diagnostics step with exit 127, before the build ran.)*
 - [ ] Select a simple app for the first rendering experiment.
 
 ## Technical investigation

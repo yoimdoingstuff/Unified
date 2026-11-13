@@ -62,8 +62,8 @@ Changing reported screen dimensions or spoofing device identity alone is not suf
 
 | Component | Status |
 | --- | --- |
-| Geometry engine (`Sources/UNGeometry.*`): Fit / Fill / Stretch transforms, inverse mapping for input, visible-region calculation | **Implemented, host unit tests written.** Plain C99, no UIKit. Tests run on build hosts via `make -C tests` and the `ci` GitHub Actions workflow. Not yet integrated with UIKit or tested on iOS. |
-| Process/config policy (`Sources/UNPolicy.*`): eligibility, global + per-app opt-in, mode selection | **Implemented, host unit tests written.** Not run on a device. |
+| Geometry engine (`Sources/UNGeometry.*`): Fit / Fill / Stretch transforms, inverse mapping for input, visible-region calculation | **Implemented; host unit tests pass in CI** (gcc/clang, Linux/macOS, with sanitizers). Plain C99, no UIKit. Not yet integrated with UIKit or tested on iOS. |
+| Process/config policy (`Sources/UNPolicy.*`): eligibility, global + per-app opt-in, mode selection | **Implemented; host unit tests pass in CI.** Not run on a device. |
 | Theos skeleton (`Tweak.x`, `Makefile`, `control`, `Unified.plist`) | **Written, not yet built.** Reads preferences and logs one line in explicitly enabled apps. No hooks; changes nothing. |
 | Rendering and touch integration | **Not started.** |
 | Upscaling, HD texture packs | **Planned** (ROADMAP Phases 3a and 3b). Not started. |

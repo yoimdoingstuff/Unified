@@ -25,7 +25,7 @@ Unified is in **planning / research**. These milestones are goals, not claims of
 **Exit:** tweak loads without changing app geometry and does not affect unrelated processes.
 
 ## Phase 2 - Geometry proof of concept
-- [ ] Implement unit-tested Fit, Fill, and Stretch calculations. *(Implemented with tests in `Sources/UNGeometry.*` and `tests/test_geometry.c`; host-only, UIKit-independent. Tick once the tests have been run and pass. Pulled ahead of Phase 0/1 because it does not depend on the target choice.)*
+- [x] Implement unit-tested Fit, Fill, and Stretch calculations. *(`Sources/UNGeometry.*`, `tests/test_geometry.c`. Host tests pass in CI; not yet exercised on iOS.)*
 - [ ] Identify app content bounds and coordinate spaces.
 - [ ] Prototype rendering adaptation in one direction.
 - [ ] Map touch coordinates back into the app's source coordinate space.
