@@ -115,10 +115,13 @@ jobs:
           OTOOL=$(ls "$BIN"/otool "$BIN"/llvm-otool "$BIN"/llvm-objdump 2>/dev/null | head -n 1)
           MINOS=""
           if [ -n "$OTOOL" ]; then
-            case "$OTOOL" in
-              *objdump) MINOS=$("$OTOOL" --macho --private-headers --all-headers "$DYLIB" 2>&1 | grep -A3 -E 'LC_VERSION_MIN_IPHONEOS|LC_BUILD_VERSION' | grep -E 'version|minos|architecture' || true) ;;
-              *) MINOS=$("$OTOOL" -arch all -l "$DYLIB" 2>&1 | grep -E '^.*\(architecture|LC_VERSION_MIN_IPHONEOS|LC_BUILD_VERSION' -A3 | grep -E 'architecture|version|minos' || true) ;;
-            esac
+            for ARCH in armv7 arm64; do
+              case "$OTOOL" in
+                *objdump) V=$("$OTOOL" --macho --private-headers --arch-name="$ARCH" "$DYLIB" 2>&1 | grep -A3 -E 'LC_VERSION_MIN_IPHONEOS|LC_BUILD_VERSION' | grep -E '^ *(version|minos) ' | head -n 1 || true) ;;
+                *) V=$("$OTOOL" -arch "$ARCH" -l "$DYLIB" 2>&1 | grep -A3 -E 'LC_VERSION_MIN_IPHONEOS|LC_BUILD_VERSION' | grep -E '^ *(version|minos) ' | head -n 1 || true) ;;
+              esac
+              MINOS="$MINOS$ARCH: $(echo "$V" | xargs)"$'\n'
+            done
           fi
           {
             echo "deb: $(basename "$DEB") ($(stat -c %s "$DEB") bytes)"
@@ -130,8 +133,17 @@ jobs:
           } > package-info.txt
           cat package-info.txt
           echo "::notice title=package info::$(sed -e 's/%/%25/g' package-info.txt | awk 'BEGIN{ORS="%0A"}{print}')"
+          printf '%s' "$MINOS" > minos.txt
 
       - uses: actions/upload-artifact@v4
         with:
           name: unified-deb
           path: Unified/packages/*.deb
+
+      - name: Check universal package
+        # Runs after the upload so the .deb is still available if this fails.
+        working-directory: Unified
+        run: |
+          cat minos.txt
+          grep -qx 'armv7: version 5.0' minos.txt || { echo "::error title=universal package::armv7 slice must target iOS 5.0"; exit 1; }
+          grep -qx 'arm64: version 7.0' minos.txt || { echo "::error title=universal package::arm64 slice must target iOS 7.0"; exit 1; }

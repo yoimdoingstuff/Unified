@@ -30,7 +30,10 @@ The `ci` GitHub Actions workflow (`.github/workflows/ci.yml`) has two jobs:
 | Toolchain | L1ghtmann `iOSToolchain-x86_64`, clang 11.1.0 | Latest release at build time. |
 | SDK | `theos/sdks` `iPhoneOS10.3.sdk` | Contains armv7 stubs. **`iPhoneOS9.3.sdk` does not link armv7:** its `libSystem.tbd` re-exports `liblaunch.dylib`, but `liblaunch.tbd` is missing from that SDK. |
 
-First successful build: commit `87a2f5f`, armv7 only, deployment target 8.0. The universal armv7 + arm64 / iOS 5.0 configuration is being verified next.
+Build history:
+- `87a2f5f`: first successful build, armv7 only, deployment target 8.0.
+- `e713149`: first universal build. One gzip-compressed `.deb` (10 KB) containing `Library/MobileSubstrate/DynamicLibraries/Unified.{dylib,plist}`, with the dylib holding armv7 + arm64 slices. Both slices were stamped with a minimum of iOS 5.0, so the arm64 slice is now forced to 7.0 per architecture in the Makefile. CI's "Check universal package" step fails if either slice's minimum changes.
+- The linker warns `building for iOS 5.0.0 is deprecated`. That is expected and harmless.
 
 `tests/Makefile` is deliberately separate from the Theos root `Makefile` so host tests never need the iOS SDK.
 

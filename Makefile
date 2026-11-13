@@ -2,8 +2,8 @@
 #
 # One universal package for iOS 5-10: a single dylib with
 #   armv7  (deployment target 5.0; also runs on armv7s devices)
-#   arm64  (iOS 7 is the first 64-bit release; the toolchain is expected
-#           to raise this slice's minimum to 7.0 automatically)
+#   arm64  (deployment target 7.0, the first 64-bit release; set below,
+#           because the toolchain otherwise stamps this slice with 5.0)
 # Version differences are handled at runtime, never by separate builds.
 #
 # Build status: CI-built on Linux (see .github/workflows/ci.yml).
@@ -31,5 +31,12 @@ TWEAK_NAME = Unified
 Unified_FILES = Tweak.x Sources/UNGeometry.c Sources/UNPolicy.c
 Unified_CFLAGS = -ISources -Wall -Wextra -Wunguarded-availability
 Unified_FRAMEWORKS = Foundation
+
+# Theos compiles and links each architecture in its own pass with
+# THEOS_CURRENT_ARCH set; the later -miphoneos-version-min wins.
+ifeq ($(THEOS_CURRENT_ARCH),arm64)
+Unified_CFLAGS += -miphoneos-version-min=7.0
+Unified_LDFLAGS += -miphoneos-version-min=7.0
+endif
 
 include $(THEOS_MAKE_PATH)/tweak.mk

@@ -15,7 +15,9 @@ Keep this list synchronized with [ROADMAP.md](ROADMAP.md).
 - [x] Add geometry tests for Fit, Fill, and Stretch. *(`tests/test_geometry.c`)*
 - [x] Confirm host tests pass in the `ci` workflow's `host-tests` job. *(Passed 2026-11-13 on commit 43d9b9a: gcc and clang on ubuntu-latest, clang on macos-latest, each with and without ASan/UBSan.)*
 - [x] Get the `tweak-build` CI job passing. *(Passed on 87a2f5f with the iPhoneOS 10.3 SDK, armv7 only. The 9.3 SDK fails: its libSystem.tbd re-exports liblaunch, but liblaunch.tbd is missing.)*
-- [ ] Confirm the universal build in CI: one dylib with armv7 (min iOS 5.0) and arm64 (min iOS 7.0) slices.
+- [x] Confirm the universal build in CI: one dylib with armv7 and arm64 slices. *(e713149)*
+- [ ] Confirm CI's "Check universal package" step passes (armv7 min 5.0, arm64 min 7.0).
+- [ ] Install the CI `.deb` on the iPad mini and run the Phase 1 device test (docs/TESTING.md).
 - [ ] Select a simple app for the first rendering experiment.
 
 ## Technical investigation
