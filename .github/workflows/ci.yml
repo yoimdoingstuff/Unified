@@ -94,8 +94,13 @@ jobs:
         working-directory: Unified
         run: |
           [ -f build.log ] || exit 0
-          # %0A is a newline inside an annotation message.
-          echo "::error title=build log (last 60 lines)::$(tail -n 60 build.log | sed -e 's/%/%25/g' -e 's/\r//g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          # Annotations are truncated at a few KB. Drop colour codes and the
+          # known-harmless "tbd built for iOS Simulator" warnings from old
+          # SDK stubs so the real error fits. %0A is a newline in a message.
+          sed -e 's/\x1b\[[0-9;]*m//g' -e 's/\r//g' build.log \
+            | grep -v "but linking in .tbd file" > build.filtered.log || true
+          echo "::error title=build log (filtered, last 40 lines)::$(tail -n 40 build.filtered.log | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          echo "::error title=build log (error lines)::$(grep -inE 'error|undefined|not found|unknown|unsupported' build.filtered.log | tail -n 25 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
 
       - name: Show package contents
         working-directory: Unified
