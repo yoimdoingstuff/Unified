@@ -12,7 +12,8 @@ Keep this list synchronized with [ROADMAP.md](ROADMAP.md).
 - [x] Set up and verify Theos. *(In CI on Linux; no local build environment.)*
 - [x] Build the minimal Logos tweak that logs in enabled apps without modifying behaviour. *(CI)*
 - [x] Install the package on the iPad mini. *(0.0.1~poc1 via Cydia; owner report.)*
-- [ ] Fix: Settings row missing on iPad mini with 0.0.2 (check PreferenceLoader first; docs/TESTING.md troubleshooting).
+- [ ] Fix: Settings row missing on iPad mini with 0.0.2. PreferenceLoader is installed and Settings was restarted. Next: check whether any tweak rows appear and whether Substrate is injecting (docs/TESTING.md troubleshooting).
+- [x] 0.0.3 (scaling + diagnostics) builds in CI. *(bc1f811)*
 - [ ] Run the Settings-pane device test in docs/TESTING.md (no SSH needed).
 - [ ] Run the scaling device test (0.0.3) and read the diagnostics report.
 - [ ] Scaling: landscape support (UIKit's transform is rotated there; currently skipped).

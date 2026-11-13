@@ -22,11 +22,20 @@ Test Fit, Fill, and Stretch independently from UIKit:
 
 ## Troubleshooting: no Unified row in Settings
 
-Reported on 0.0.2 (iPad mini, iOS 8.4.1). Check in this order:
+Reported on 0.0.2 (iPad mini, iOS 8.4.1). PreferenceLoader confirmed installed and Settings fully restarted; the row still did not appear.
+
+What PreferenceLoader requires (from its source, DHowett/preferenceloader `Tweak.xm` / `prefs.xm`): it reads every `/Library/PreferenceLoader/Preferences/*.plist` and skips one only if it has no `entry` key, a `filter` that does not match, or no bundle at `/Library/PreferenceBundles/<bundle>.bundle`. Unified's package passes all three (checked in CI). On iOS 6 and later, rows are inserted **after the Twitter/Facebook group**, partway down Settings' left column, not at the bottom.
+
+So if the row is missing, PreferenceLoader itself is probably not running in Settings, which means Cydia Substrate is not injecting tweaks. If so, Unified's tweak cannot load into apps either.
+
+Check in this order:
 1. **PreferenceLoader installed?** Cydia → Installed → look for "PreferenceLoader". A `.deb` installed with Filza or `dpkg -i` does not install dependencies automatically, and without PreferenceLoader the Unified row never appears. Install it from Cydia (BigBoss repo).
 2. **Settings fully restarted?** Close Settings from the app switcher (double-press Home, swipe it up) and open it again. A respring also works.
 3. **Right version?** Cydia → Installed → Unified should show 0.0.2 or later. 0.0.1 had no Settings pane.
 4. **Files present?** In Filza: `/Library/PreferenceLoader/Preferences/Unified.plist` and `/Library/PreferenceBundles/UnifiedPrefs.bundle/`.
+5. **Do any other tweaks' settings rows appear?** If none do, Substrate is not injecting.
+6. **Substrate Safe Mode?** After a SpringBoard crash, Substrate disables all tweaks until you respring from its alert.
+7. **Rebooted or resprung since jailbreaking/installing?** With a semi-untethered or re-jailbroken boot, tweaks only load after the jailbreak has run for that boot.
 
 Fallback without the pane: create `/var/mobile/Library/Preferences/com.yoimdoingstuff.unified.plist` in Filza (it can edit plists), using `Resources/example-preferences.plist` as the template.
 
