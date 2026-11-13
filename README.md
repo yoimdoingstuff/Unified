@@ -12,7 +12,9 @@ The project is currently in planning and research. No working tweak or compatibi
 - Provide per-app configuration.
 - Offer Fit, Fill, and Stretch display modes.
 - Preserve touch interaction, scrolling, rotation, and system UI behaviour.
-- Support legacy jailbreak injection environments where practical.
+- Support legacy jailbreak injection environments where practical, with no jailbreak-specific code.
+- **Upscaling (planned):** render scaled apps at a higher internal resolution and offer filter choices, so enlarged interfaces look sharp rather than pixel-stretched.
+- **HD texture packs (planned):** optional, user-supplied, per-app replacement images at higher resolution, for bitmap content that upscaling cannot sharpen.
 
 ## Display modes
 
@@ -39,7 +41,7 @@ Changing reported screen dimensions or spoofing device identity alone is not suf
 - A jailbreak injection backend selected for the target iOS and jailbreak.
 - UIKit and Core Animation investigation for layout, rendering, and coordinate handling.
 
-The minimum iOS version, jailbreak targets, and injection platforms have not yet been selected. See [Compatibility](docs/COMPATIBILITY.md).
+**Target range: iOS 5 through iOS 10** (armv7, armv7s, arm64). This is the goal, not a tested claim. No version in that range has been tested yet. **First proof-of-concept target:** iPad mini (1st generation, armv7) on iOS 8.4.1 with the EverPwnage jailbreak, scaling iPhone apps up to the iPad display. Nothing has been built or run on it yet. See [Compatibility](docs/COMPATIBILITY.md).
 
 ## Repository guide
 - [Project overview](docs/PROJECT_OVERVIEW.md)
@@ -56,7 +58,17 @@ The minimum iOS version, jailbreak targets, and injection platforms have not yet
 
 ## Current status
 
-**Planning / research.** Implementation has not started.
+**Planning / research, early implementation.** No tweak exists yet; nothing runs on a device.
+
+| Component | Status |
+| --- | --- |
+| Geometry engine (`Sources/UNGeometry.*`): Fit / Fill / Stretch transforms, inverse mapping for input, visible-region calculation | **Implemented, host unit tests written.** Plain C99, no UIKit. Tests run on build hosts via `make -C tests` and the `ci` GitHub Actions workflow. Not yet integrated with UIKit or tested on iOS. |
+| Process/config policy (`Sources/UNPolicy.*`): eligibility, global + per-app opt-in, mode selection | **Implemented, host unit tests written.** Not run on a device. |
+| Theos skeleton (`Tweak.x`, `Makefile`, `control`, `Unified.plist`) | **Written, not yet built.** Reads preferences and logs one line in explicitly enabled apps. No hooks; changes nothing. |
+| Rendering and touch integration | **Not started.** |
+| Upscaling, HD texture packs | **Planned** (ROADMAP Phases 3a and 3b). Not started. |
+
+Known geometry limitations: axis-aligned scale + translation only (no rotation; orientation must be resolved before rectangles are passed in), content is always centred, no pixel rounding, and touches exactly on a content edge may be classified either side due to floating-point rounding.
 
 The first milestone is a small proof of concept on one chosen legacy iOS version and jailbreak environment. It should demonstrate one scaling direction, correct touch mapping, and a safe way to disable the tweak before expanding scope.
 

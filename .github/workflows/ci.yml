@@ -1,0 +1,87 @@
+name: ci
+
+# host-tests: UIKit-independent unit tests on build hosts.
+# tweak-build: builds the Theos package for armv7. A successful build does
+# NOT mean the tweak works; nothing here runs on an iOS device.
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  host-tests:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cc: gcc
+          - os: ubuntu-latest
+            cc: clang
+          - os: macos-latest
+            cc: clang
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unit tests
+        run: make -C tests CC=${{ matrix.cc }}
+      - name: Unit tests with sanitizers
+        run: |
+          make -C tests clean
+          make -C tests CC=${{ matrix.cc }} EXTRA_CFLAGS="-fsanitize=address,undefined -fno-sanitize-recover=all"
+
+  tweak-build:
+    # Linux: the Theos Linux toolchain still links armv7; recent Xcode does not.
+    runs-on: ubuntu-22.04
+    env:
+      THEOS: ${{ github.workspace }}/theos
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          path: Unified
+
+      - name: Install host packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential fakeroot rsync curl perl zip unzip git libxml2 libtinfo5
+
+      - name: Install Theos
+        run: git clone --recursive --depth 1 https://github.com/theos/theos.git "$THEOS"
+
+      - name: Install iOS toolchain (Linux)
+        run: |
+          mkdir -p "$THEOS/toolchain"
+          curl -fsSL https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz \
+            | tar -xJ -C "$THEOS/toolchain"
+
+      - name: Install iPhoneOS 9.3 SDK
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks
+          git -C /tmp/sdks sparse-checkout set iPhoneOS9.3.sdk
+          mkdir -p "$THEOS/sdks"
+          cp -R /tmp/sdks/iPhoneOS9.3.sdk "$THEOS/sdks/"
+
+      - name: Record tool versions
+        run: |
+          git -C "$THEOS" rev-parse HEAD
+          ls "$THEOS/toolchain"
+          find "$THEOS/toolchain" -name clang -type f -o -name clang -type l | head -n 1 | xargs -r -I{} {} --version
+
+      - name: Build package
+        working-directory: Unified
+        run: make package FINALPACKAGE=1
+
+      - name: Show package contents
+        working-directory: Unified
+        run: |
+          ls -l packages
+          dpkg-deb --info packages/*.deb
+          dpkg-deb --contents packages/*.deb
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: unified-deb
+          path: Unified/packages/*.deb

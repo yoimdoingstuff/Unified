@@ -1,0 +1,10 @@
+# Host test output
+tests/build/
+
+# Theos (future)
+.theos/
+packages/
+obj/
+
+# macOS
+.DS_Store

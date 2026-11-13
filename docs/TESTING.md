@@ -6,6 +6,8 @@ A successful build does not prove runtime scaling works. Test visual geometry, i
 
 ## Geometry unit tests
 
+Implemented in `tests/test_geometry.c` against `Sources/UNGeometry.c`; run with `make -C tests` (see [Development](DEVELOPMENT.md)). Each item below has at least one test case.
+
 Test Fit, Fill, and Stretch independently from UIKit:
 - Portrait and landscape source/destination rectangles.
 - Equal and extreme aspect ratios.
@@ -13,6 +15,20 @@ Test Fit, Fill, and Stretch independently from UIKit:
 - Invalid or zero-sized input.
 - Expected scale and translation.
 - Forward/inverse transform round trips.
+
+## First device test: Phase 1 skeleton
+
+Goal: show the tweak loads only where enabled and changes nothing. Not run yet.
+
+1. Install the package. Reboot or respring if prompted.
+2. With **no** preferences file, open several apps and Settings. Expected: no `[Unified]` log lines, no behaviour change.
+3. Install the example preferences with one test app's bundle ID. Launch that app. Expected: exactly one `[Unified] enabled for <bundle id> (mode: fit)` line in the device log, and no visible change.
+4. Launch a different app. Expected: no log line.
+5. Change `Mode` to `stretch` and an invalid value. Expected: `stretch`, then `fit`.
+6. Set `Enabled` to `false`. Expected: no log line.
+7. Uninstall the package. Expected: device and apps behave normally.
+
+If step 3 shows nothing, check that Cydia Substrate is installed, then whether the app's sandbox can read the preferences path. That path is unverified on iOS 8.
 
 ## Runtime matrix
 

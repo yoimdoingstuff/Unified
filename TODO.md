@@ -3,29 +3,49 @@
 Keep this list synchronized with [ROADMAP.md](ROADMAP.md).
 
 ## Immediate priorities
-- [ ] Decide initial iOS version.
-- [ ] Decide initial device and CPU architecture.
-- [ ] Decide jailbreak and injection target.
-- [ ] Set up and verify Theos.
-- [ ] Create a minimal Logos tweak that logs its process without modifying behaviour.
-- [ ] Add geometry tests for Fit, Fill, and Stretch.
+- [x] Decide supported iOS range: 5–10. *(See docs/COMPATIBILITY.md.)*
+- [x] Decide first proof-of-concept iOS version: 8.4.1.
+- [x] Decide initial device and CPU architecture: iPad mini 1st gen, armv7.
+- [x] Decide first jailbreak: EverPwnage. *(Unified itself must stay jailbreak-agnostic.)*
+- [ ] On the device: confirm Cydia Substrate is installed (only if the first test tweak fails to load).
+- [ ] Find and record a toolchain/SDK that builds armv7 (first for iOS 8.4.1, later down to iOS 5.0) and arm64.
+- [ ] Set up and verify Theos (needs macOS, Linux, or WSL; this Windows machine has none yet).
+- [ ] Build the minimal Logos tweak (`Tweak.x`, written) that logs in enabled apps without modifying behaviour.
+- [ ] Run the Phase 1 device test in docs/TESTING.md.
+- [x] Add geometry tests for Fit, Fill, and Stretch. *(`tests/test_geometry.c`)*
+- [ ] Confirm host tests pass on a build host (`make -C tests`) and in the `ci` workflow's `host-tests` job. Written on a machine without a C compiler; not yet run.
 - [ ] Select a simple app for the first rendering experiment.
 
 ## Technical investigation
-- [ ] Determine target OS screen and window bounds behaviour.
+- [ ] Determine target OS screen and window bounds behaviour (portrait-fixed before iOS 8, orientation-dependent from iOS 8).
+- [ ] Find where iPhone-on-iPad compatibility scaling is applied on each version (in-app UIKit vs SpringBoard/backboardd).
+- [ ] Investigate the install/launch block for iPad-only apps on iPhone.
 - [ ] Investigate UIKit trait collections and size classes.
 - [ ] Investigate safe areas and status/navigation bars.
 - [ ] Identify a viable rendering integration point.
-- [ ] Determine inverse touch/gesture coordinate mapping.
+- [ ] Determine inverse touch/gesture coordinate mapping. *(Math exists: `UNTransformMapDestinationPointToSource`. Where to apply it in UIKit's event path, and what to do with touches outside content, are still open.)*
+- [ ] Decide pixel-alignment policy for transforms (rounding to device pixels) once the rendering hook is known.
 - [ ] Test orientation changes and relaunch.
 - [ ] Evaluate whether specific apps require idiom spoofing.
 - [ ] Record private API dependencies and alternatives.
 
+## Upscaling (ROADMAP Phase 3a)
+- [ ] Capture baseline screenshots of iOS's own iPhone-app 2× mode on the iPad mini.
+- [ ] Prototype a higher `contentsScale` on one app's layer tree and compare text sharpness.
+- [ ] Prototype `CALayer` filter choices (nearest / linear / trilinear).
+- [ ] Measure memory and frame rate on the 512 MB device.
+
+## HD texture packs (ROADMAP Phase 3b)
+- [ ] Draft the pack folder layout and manifest format.
+- [ ] Prototype `UIImage` load replacement for one app, keeping the original point size.
+- [ ] Define validation rules (aspect ratio, size limits, formats) and fallbacks.
+- [ ] Research asset-catalog images and OpenGL ES texture uploads.
+
 ## Configuration
-- [ ] Define bundle identifier matching.
-- [ ] Define global defaults and per-app overrides.
-- [ ] Define safe disable mechanism.
-- [ ] Decide preference storage for target iOS.
+- [x] Define bundle identifier matching. *(Exact match; see `UNPolicy.c`.)*
+- [x] Define global defaults and per-app overrides. *(docs/DEVELOPMENT.md)*
+- [x] Define safe disable mechanism. *(Off unless both switches are on; Settings/SpringBoard excluded; uninstall.)*
+- [ ] Verify preference storage on iOS 8.4.1: can a sandboxed app read `/var/mobile/Library/Preferences/com.yoimdoingstuff.unified.plist`?
 - [ ] Design Settings UI after core behaviour is proven.
 
 ## Quality
