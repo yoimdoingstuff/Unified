@@ -25,7 +25,7 @@ jobs:
             cc: clang
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Unit tests
         run: make -C tests CC=${{ matrix.cc }}
       - name: Unit tests with sanitizers
@@ -39,7 +39,7 @@ jobs:
     env:
       THEOS: ${{ github.workspace }}/theos
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           path: Unified
 
@@ -56,6 +56,8 @@ jobs:
           mkdir -p "$THEOS/toolchain"
           curl -fsSL https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz \
             | tar -xJ -C "$THEOS/toolchain"
+          # Logs need a GitHub sign-in; annotations are public, so report layout there.
+          echo "::notice title=toolchain layout::$(find "$THEOS/toolchain" -maxdepth 4 -type d | sed "s#$THEOS/##" | head -n 20 | tr '\n' ' ')"
 
       - name: Install iPhoneOS 9.3 SDK
         run: |
@@ -65,14 +67,35 @@ jobs:
           cp -R /tmp/sdks/iPhoneOS9.3.sdk "$THEOS/sdks/"
 
       - name: Record tool versions
+        # Diagnostics only; never fails the job. Results go to public annotations.
+        continue-on-error: true
         run: |
-          git -C "$THEOS" rev-parse HEAD
-          ls "$THEOS/toolchain"
-          find "$THEOS/toolchain" -name clang -type f -o -name clang -type l | head -n 1 | xargs -r -I{} {} --version
+          set +e
+          echo "::notice title=theos commit::$(git -C "$THEOS" rev-parse --short HEAD)"
+          CLANG="$THEOS/toolchain/linux/iphone/bin/clang"
+          if [ ! -e "$CLANG" ]; then
+            echo "::warning title=clang missing::$(find "$THEOS/toolchain" -name 'clang*' | head -n 10 | tr '\n' ' ')"
+            exit 0
+          fi
+          out=$("$CLANG" --version 2>&1); rc=$?
+          echo "::notice title=clang --version (rc=$rc)::$(echo "$out" | head -n 3 | tr '\n' ' ')"
+          if [ $rc -ne 0 ]; then
+            echo "::warning title=clang missing libraries::$(ldd "$(readlink -f "$CLANG")" 2>&1 | grep -i 'not found' | tr '\n' ' ')"
+          fi
 
       - name: Build package
         working-directory: Unified
-        run: make package FINALPACKAGE=1
+        run: |
+          set -o pipefail
+          make package FINALPACKAGE=1 2>&1 | tee build.log
+
+      - name: Report build failure
+        if: failure()
+        working-directory: Unified
+        run: |
+          [ -f build.log ] || exit 0
+          # %0A is a newline inside an annotation message.
+          echo "::error title=build log (last 60 lines)::$(tail -n 60 build.log | sed -e 's/%/%25/g' -e 's/\r//g' | awk 'BEGIN{ORS="%0A"}{print}')"
 
       - name: Show package contents
         working-directory: Unified
