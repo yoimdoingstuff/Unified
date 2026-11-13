@@ -1,8 +1,9 @@
 name: ci
 
 # host-tests: UIKit-independent unit tests on build hosts.
-# tweak-build: builds the Theos package for armv7. A successful build does
-# NOT mean the tweak works; nothing here runs on an iOS device.
+# tweak-build: builds the single universal Theos package (armv7 + arm64,
+# iOS 5-10). A successful build does NOT mean the tweak works; nothing
+# here runs on an iOS device.
 
 on:
   push:
@@ -35,15 +36,12 @@ jobs:
 
   tweak-build:
     # Linux: the Theos Linux toolchain still links armv7; recent Xcode does not.
-    # Two SDKs are tried side by side until one is confirmed to link armv7.
-    strategy:
-      fail-fast: false
-      matrix:
-        sdk: ["9.3", "10.3"]
+    # SDK: theos/sdks iPhoneOS 10.3. The 9.3 SDK fails to link armv7
+    # (libSystem.tbd re-exports liblaunch, but liblaunch.tbd is missing).
     runs-on: ubuntu-22.04
     env:
       THEOS: ${{ github.workspace }}/theos
-      SDK: ${{ matrix.sdk }}
+      SDK: "10.3"
     steps:
       - uses: actions/checkout@v5
         with:
@@ -52,7 +50,7 @@ jobs:
       - name: Install host packages
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential fakeroot rsync curl perl zip unzip git libxml2 libtinfo5
+          sudo apt-get install -y build-essential fakeroot rsync curl perl zip unzip git file binutils libxml2 libtinfo5
 
       - name: Install Theos
         run: git clone --recursive --depth 1 https://github.com/theos/theos.git "$THEOS"
@@ -62,8 +60,6 @@ jobs:
           mkdir -p "$THEOS/toolchain"
           curl -fsSL https://github.com/L1ghtmann/llvm-project/releases/latest/download/iOSToolchain-x86_64.tar.xz \
             | tar -xJ -C "$THEOS/toolchain"
-          # Logs need a GitHub sign-in; annotations are public, so report layout there.
-          echo "::notice title=toolchain layout::$(find "$THEOS/toolchain" -maxdepth 4 -type d | sed "s#$THEOS/##" | head -n 20 | tr '\n' ' ')"
 
       - name: Install iPhoneOS SDK
         run: |
@@ -72,36 +68,19 @@ jobs:
           mkdir -p "$THEOS/sdks"
           cp -R "/tmp/sdks/iPhoneOS$SDK.sdk" "$THEOS/sdks/"
 
-      - name: Inspect SDK stubs
-        continue-on-error: true
-        run: |
-          set +e
-          S="$THEOS/sdks/iPhoneOS$SDK.sdk"
-          echo "::notice title=SDK $SDK usr/lib/system::$(ls "$S/usr/lib/system" 2>&1 | tr '\n' ' ')"
-          echo "::notice title=SDK $SDK libSystem.tbd header::$(head -n 12 "$S/usr/lib/libSystem.tbd" 2>&1 | tr '\n' ' ')"
-
       - name: Record tool versions
-        # Diagnostics only; never fails the job. Results go to public annotations.
+        # Job logs need a GitHub sign-in; annotations are public, so report there.
         continue-on-error: true
         run: |
           set +e
           echo "::notice title=theos commit::$(git -C "$THEOS" rev-parse --short HEAD)"
-          CLANG="$THEOS/toolchain/linux/iphone/bin/clang"
-          if [ ! -e "$CLANG" ]; then
-            echo "::warning title=clang missing::$(find "$THEOS/toolchain" -name 'clang*' | head -n 10 | tr '\n' ' ')"
-            exit 0
-          fi
-          out=$("$CLANG" --version 2>&1); rc=$?
-          echo "::notice title=clang --version (rc=$rc)::$(echo "$out" | head -n 3 | tr '\n' ' ')"
-          if [ $rc -ne 0 ]; then
-            echo "::warning title=clang missing libraries::$(ldd "$(readlink -f "$CLANG")" 2>&1 | grep -i 'not found' | tr '\n' ' ')"
-          fi
+          echo "::notice title=clang::$("$THEOS/toolchain/linux/iphone/bin/clang" --version 2>&1 | head -n 1)"
 
       - name: Build package
         working-directory: Unified
         run: |
           set -o pipefail
-          make package FINALPACKAGE=1 TARGET="iphone:clang:$SDK:8.0" 2>&1 | tee build.log
+          make package FINALPACKAGE=1 2>&1 | tee build.log
 
       - name: Report build failure
         if: failure()
@@ -109,21 +88,50 @@ jobs:
         run: |
           [ -f build.log ] || exit 0
           # Annotations are truncated at a few KB. Drop colour codes and the
-          # known-harmless "tbd built for iOS Simulator" warnings from old
-          # SDK stubs so the real error fits. %0A is a newline in a message.
+          # known-harmless "tbd built for iOS Simulator" warnings so the real
+          # error fits. %0A is a newline inside an annotation message.
           sed -e 's/\x1b\[[0-9;]*m//g' -e 's/\r//g' build.log \
             | grep -v "but linking in .tbd file" > build.filtered.log || true
-          echo "::error title=SDK $SDK build log (filtered, last 40 lines)::$(tail -n 40 build.filtered.log | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
-          echo "::error title=SDK $SDK build log (error lines)::$(grep -inE 'error|undefined|not found|unknown|unsupported' build.filtered.log | tail -n 25 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          echo "::error title=build log (filtered, last 40 lines)::$(tail -n 40 build.filtered.log | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          echo "::error title=build log (error lines)::$(grep -inE 'error|undefined|not found|unknown|unsupported' build.filtered.log | tail -n 25 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
 
-      - name: Show package contents
+      - name: Report build warnings
+        if: success()
+        continue-on-error: true
         working-directory: Unified
         run: |
-          ls -l packages
-          dpkg-deb --info packages/*.deb
-          dpkg-deb --contents packages/*.deb
+          w=$(sed -e 's/\x1b\[[0-9;]*m//g' build.log | grep -i 'warning' | grep -v "but linking in .tbd file" | head -n 20)
+          [ -n "$w" ] && echo "::warning title=build warnings::$(echo "$w" | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          exit 0
+
+      - name: Inspect package
+        working-directory: Unified
+        run: |
+          set -e
+          DEB=$(ls packages/*.deb | head -n 1)
+          mkdir -p /tmp/deb && dpkg-deb -x "$DEB" /tmp/deb
+          DYLIB=$(find /tmp/deb -name 'Unified.dylib' | head -n 1)
+          BIN="$THEOS/toolchain/linux/iphone/bin"
+          OTOOL=$(ls "$BIN"/otool "$BIN"/llvm-otool "$BIN"/llvm-objdump 2>/dev/null | head -n 1)
+          MINOS=""
+          if [ -n "$OTOOL" ]; then
+            case "$OTOOL" in
+              *objdump) MINOS=$("$OTOOL" --macho --private-headers --all-headers "$DYLIB" 2>&1 | grep -A3 -E 'LC_VERSION_MIN_IPHONEOS|LC_BUILD_VERSION' | grep -E 'version|minos|architecture' || true) ;;
+              *) MINOS=$("$OTOOL" -arch all -l "$DYLIB" 2>&1 | grep -E '^.*\(architecture|LC_VERSION_MIN_IPHONEOS|LC_BUILD_VERSION' -A3 | grep -E 'architecture|version|minos' || true) ;;
+            esac
+          fi
+          {
+            echo "deb: $(basename "$DEB") ($(stat -c %s "$DEB") bytes)"
+            echo "members: $(ar t "$DEB" | tr '\n' ' ')"
+            dpkg-deb -f "$DEB" Package Version Architecture Depends
+            echo "files:"; dpkg-deb -c "$DEB" | awk '{print "  " $6}'
+            echo "dylib: $(file -b "$DYLIB")"
+            echo "min OS (via $(basename "${OTOOL:-none}")):"; echo "$MINOS" | sed 's/^/  /'
+          } > package-info.txt
+          cat package-info.txt
+          echo "::notice title=package info::$(sed -e 's/%/%25/g' package-info.txt | awk 'BEGIN{ORS="%0A"}{print}')"
 
       - uses: actions/upload-artifact@v4
         with:
-          name: unified-deb-sdk${{ matrix.sdk }}
+          name: unified-deb
           path: Unified/packages/*.deb

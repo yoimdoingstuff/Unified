@@ -9,14 +9,15 @@ Unified is in **planning / research**. These milestones are goals, not claims of
 - [ ] Choose a toolchain/SDK that builds armv7 (iOS 5.0 deployment target) and arm64.
 - [ ] Research where iOS applies iPhone-on-iPad compatibility scaling, and the install-time block on iPad-only apps on iPhone.
 - [ ] Choose the first jailbreak and injection environment.
-- [ ] Confirm Theos toolchain support.
+- [x] Confirm Theos toolchain support. *(Theos + L1ghtmann Linux toolchain + iPhoneOS 10.3 SDK builds armv7 in CI; see docs/DEVELOPMENT.md.)*
+- [ ] Confirm the single universal package (armv7 iOS 5.0+, arm64 iOS 7.0+) builds.
 - [ ] Research UIKit geometry, trait collections, screen modes, and Core Animation on the target OS.
 - [ ] Build a compatibility matrix of representative iPhone-only and iPad-only apps.
 
 **Exit:** reproducible development environment and written proof-of-concept plan.
 
 ## Phase 1 - Safe tweak skeleton
-- [ ] Create Theos project and package metadata. *(Written; not yet built.)*
+- [x] Create Theos project and package metadata. *(Builds in CI.)*
 - [ ] Add process filtering and bundle identification. *(Written: `UNPolicy.c` + `Tweak.x`; untested on device.)*
 - [ ] Add configuration parsing with safe defaults. *(Written; untested on device.)*
 - [ ] Add global disable and per-app opt-in. *(Written; untested on device.)*

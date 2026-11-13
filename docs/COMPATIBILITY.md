@@ -43,7 +43,7 @@ That is a design goal, not a compatibility claim. Only jailbreaks with a test re
 
 Implications:
 - iOS 5 and 6 are 32-bit only. arm64 binaries need a minimum deployment target of iOS 7.
-- A package covering the whole range needs armv7 + arm64 slices (armv7s optional; armv7 code runs on armv7s).
+- **Unified ships as one universal package** with armv7 (iOS 5.0+) and arm64 (iOS 7.0+) slices. armv7s is not built separately, because armv7 code runs on armv7s devices.
 - Highest iOS per device should be confirmed against Apple's release history before a device is added to the matrix.
 
 ## Version differences that affect Unified
@@ -77,7 +77,7 @@ Tweaks in this era generally load through Cydia Substrate (MobileSubstrate), or 
 | 5.x | armv7 | Not selected | Not selected | Not tested | Not tested |
 | 6.x | armv7 / armv7s | Not selected | Not selected | Not tested | Not tested |
 | 7.x | armv7 / armv7s / arm64 | Not selected | Not selected | Not tested | Not tested |
-| **8.4.1 (first PoC)** | iPad mini 1st gen, armv7 | EverPwnage (version TBD) | Cydia Substrate (to confirm) | Not tested | Not tested |
+| **8.4.1 (first PoC)** | iPad mini 1st gen, armv7 | EverPwnage | Cydia Substrate (to confirm) | Build-tested (CI) | Not tested |
 | 8.x (other) | armv7 / armv7s / arm64 | Not selected | Not selected | Not tested | Not tested |
 | 9.x | armv7 / armv7s / arm64 | Not selected | Not selected | Not tested | Not tested |
 | 10.x | armv7s / arm64 | Not selected | Not selected | Not tested | Not tested |

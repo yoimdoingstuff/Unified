@@ -41,7 +41,7 @@ Changing reported screen dimensions or spoofing device identity alone is not suf
 - A jailbreak injection backend selected for the target iOS and jailbreak.
 - UIKit and Core Animation investigation for layout, rendering, and coordinate handling.
 
-**Target range: iOS 5 through iOS 10** (armv7, armv7s, arm64). This is the goal, not a tested claim. No version in that range has been tested yet. **First proof-of-concept target:** iPad mini (1st generation, armv7) on iOS 8.4.1 with the EverPwnage jailbreak, scaling iPhone apps up to the iPad display. Nothing has been built or run on it yet. See [Compatibility](docs/COMPATIBILITY.md).
+**Target range: iOS 5 through iOS 10, as one universal package.** A single `.deb` contains one dylib with an armv7 slice (iOS 5.0+) and an arm64 slice (iOS 7.0+). There are no per-version builds. This is the goal, not a tested claim. No version in that range has been tested yet. **First proof-of-concept target:** iPad mini (1st generation, armv7) on iOS 8.4.1 with the EverPwnage jailbreak, scaling iPhone apps up to the iPad display. Nothing has been built or run on it yet. See [Compatibility](docs/COMPATIBILITY.md).
 
 ## Repository guide
 - [Project overview](docs/PROJECT_OVERVIEW.md)
@@ -64,7 +64,7 @@ Changing reported screen dimensions or spoofing device identity alone is not suf
 | --- | --- |
 | Geometry engine (`Sources/UNGeometry.*`): Fit / Fill / Stretch transforms, inverse mapping for input, visible-region calculation | **Implemented; host unit tests pass in CI** (gcc/clang, Linux/macOS, with sanitizers). Plain C99, no UIKit. Not yet integrated with UIKit or tested on iOS. |
 | Process/config policy (`Sources/UNPolicy.*`): eligibility, global + per-app opt-in, mode selection | **Implemented; host unit tests pass in CI.** Not run on a device. |
-| Theos skeleton (`Tweak.x`, `Makefile`, `control`, `Unified.plist`) | **Written, not yet built.** Reads preferences and logs one line in explicitly enabled apps. No hooks; changes nothing. |
+| Theos skeleton (`Tweak.x`, `Makefile`, `control`, `Unified.plist`) | **Builds in CI** (armv7, iOS 8.0 target; universal armv7 + arm64 / iOS 5.0 build in progress). Not installed on a device yet. Reads preferences and logs one line in explicitly enabled apps. No hooks; changes nothing. |
 | Rendering and touch integration | **Not started.** |
 | Upscaling, HD texture packs | **Planned** (ROADMAP Phases 3a and 3b). Not started. |
 

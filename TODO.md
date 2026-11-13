@@ -8,13 +8,14 @@ Keep this list synchronized with [ROADMAP.md](ROADMAP.md).
 - [x] Decide initial device and CPU architecture: iPad mini 1st gen, armv7.
 - [x] Decide first jailbreak: EverPwnage. *(Unified itself must stay jailbreak-agnostic.)*
 - [ ] On the device: confirm Cydia Substrate is installed (only if the first test tweak fails to load).
-- [ ] Find and record a toolchain/SDK that builds armv7 (first for iOS 8.4.1, later down to iOS 5.0) and arm64.
+- [x] Find and record a toolchain/SDK that builds armv7. *(docs/DEVELOPMENT.md: verified build toolchain.)*
 - [ ] Set up and verify Theos (needs macOS, Linux, or WSL; this Windows machine has none yet).
 - [ ] Build the minimal Logos tweak (`Tweak.x`, written) that logs in enabled apps without modifying behaviour.
 - [ ] Run the Phase 1 device test in docs/TESTING.md.
 - [x] Add geometry tests for Fit, Fill, and Stretch. *(`tests/test_geometry.c`)*
 - [x] Confirm host tests pass in the `ci` workflow's `host-tests` job. *(Passed 2026-11-13 on commit 43d9b9a: gcc and clang on ubuntu-latest, clang on macos-latest, each with and without ASan/UBSan.)*
-- [ ] Get the `tweak-build` CI job passing. *(As of c185b89 all sources compile for armv7 with L1ghtmann clang 11.1.0 + Theos 8167f59. Linking against the theos/sdks iPhoneOS 9.3 SDK fails: `ld: file not found: /usr/lib/system/liblaunch.dylib for architecture armv7`. CI now tries the 9.3 and 10.3 SDKs side by side.)*
+- [x] Get the `tweak-build` CI job passing. *(Passed on 87a2f5f with the iPhoneOS 10.3 SDK, armv7 only. The 9.3 SDK fails: its libSystem.tbd re-exports liblaunch, but liblaunch.tbd is missing.)*
+- [ ] Confirm the universal build in CI: one dylib with armv7 (min iOS 5.0) and arm64 (min iOS 7.0) slices.
 - [ ] Select a simple app for the first rendering experiment.
 
 ## Technical investigation

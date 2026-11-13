@@ -1,16 +1,25 @@
-# Unified - Theos build. NOT yet verified: no build has been run.
+# Unified - Theos build.
 #
-# First target: iPad mini 1st gen (armv7), iOS 8.4.1.
-# The deployment target will be lowered towards 5.0 once a toolchain that
-# builds armv7 for iOS 5 is confirmed (see docs/DEVELOPMENT.md).
+# One universal package for iOS 5-10: a single dylib with
+#   armv7  (deployment target 5.0; also runs on armv7s devices)
+#   arm64  (iOS 7 is the first 64-bit release; the toolchain is expected
+#           to raise this slice's minimum to 7.0 automatically)
+# Version differences are handled at runtime, never by separate builds.
 #
-# The SDK must still contain armv7 stubs; iPhoneOS 9.3 from theos/sdks is
-# what CI uses. Override on the command line to try another.
+# Build status: CI-built on Linux (see .github/workflows/ci.yml).
+# Runtime: not yet tested on any device.
+#
+# SDK: iPhoneOS 10.3 from theos/sdks (has armv7 stubs). The theos/sdks 9.3
+# SDK does NOT link armv7 here: its libSystem.tbd re-exports liblaunch,
+# but liblaunch.tbd is missing from that SDK.
+#
+# The SDK is newer than the device, so -Wunguarded-availability flags any
+# API newer than the deployment target that is used without a runtime check.
 #
 # Host unit tests do not use this file: run `make -C tests`.
 
-TARGET ?= iphone:clang:9.3:8.0
-ARCHS ?= armv7
+TARGET ?= iphone:clang:10.3:5.0
+ARCHS ?= armv7 arm64
 
 # Cydia-era dpkg on iOS 8 may not understand xz/zstd-compressed packages.
 THEOS_PLATFORM_DEB_COMPRESSION_TYPE = gzip
@@ -20,7 +29,7 @@ include $(THEOS)/makefiles/common.mk
 TWEAK_NAME = Unified
 
 Unified_FILES = Tweak.x Sources/UNGeometry.c Sources/UNPolicy.c
-Unified_CFLAGS = -ISources -Wall -Wextra
+Unified_CFLAGS = -ISources -Wall -Wextra -Wunguarded-availability
 Unified_FRAMEWORKS = Foundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
