@@ -1,0 +1,10 @@
+{
+	entry = {
+		bundle = UnifiedPrefs;
+		cell = PSLinkCell;
+		detail = UNRootListController;
+		icon = "icon.png";
+		isController = 1;
+		label = Unified;
+	};
+}

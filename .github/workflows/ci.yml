@@ -122,24 +122,25 @@ jobs:
         run: |
           set -e
           DEB=$(ls packages/*.deb | head -n 1)
-          mkdir -p /tmp/deb && dpkg-deb -x "$DEB" /tmp/deb
-          DYLIB=$(find /tmp/deb -name 'Unified.dylib' | head -n 1)
-          # Read the minimum iOS version from each slice's load commands
-          # directly (tools/macho_minos.py), not via toolchain utilities.
-          MINOS=$(python3 tools/macho_minos.py "$DYLIB")
-          THIN=$(for f in $(find .theos -path '*/obj/*' -name Unified.dylib | sort); do echo "$f -> $(python3 tools/macho_minos.py "$f" | tr '\n' ' ')"; done)
+          rm -rf /tmp/deb && mkdir -p /tmp/deb && dpkg-deb -x "$DEB" /tmp/deb
+          # Every Mach-O in the package, with the minimum iOS version of each
+          # slice read directly from its load commands (tools/macho_minos.py).
+          : > minos.txt
+          for f in $(find /tmp/deb -type f | sort); do
+            if file -b "$f" | grep -q 'Mach-O'; then
+              echo "${f#/tmp/deb}" >> minos.txt
+              python3 tools/macho_minos.py "$f" | sed 's/^/  /' >> minos.txt
+            fi
+          done
           {
             echo "deb: $(basename "$DEB") ($(stat -c %s "$DEB") bytes)"
             echo "members: $(ar t "$DEB" | tr '\n' ' ')"
             dpkg-deb -f "$DEB" Package Version Architecture Depends
             echo "files:"; dpkg-deb -c "$DEB" | awk '{print "  " $6}'
-            echo "dylib: $(file -b "$DYLIB")"
-            echo "min OS per slice:"; echo "$MINOS" | sed 's/^/  /'
-            echo "per-arch build outputs before lipo:"; echo "$THIN" | sed 's/^/  /'
+            echo "Mach-O files, min iOS per slice:"; sed 's/^/  /' minos.txt
           } > package-info.txt
           cat package-info.txt
           echo "::notice title=package info::$(sed -e 's/%/%25/g' package-info.txt | awk 'BEGIN{ORS="%0A"}{print}')"
-          printf '%s\n' "$MINOS" > minos.txt
 
       - uses: actions/upload-artifact@v4
         with:
@@ -150,6 +151,32 @@ jobs:
         # Runs after the upload so the .deb is still available if this fails.
         working-directory: Unified
         run: |
-          cat minos.txt
-          grep -qx 'armv7: version 5.0' minos.txt || { echo "::error title=universal package::armv7 slice must target iOS 5.0"; exit 1; }
-          grep -qx 'arm64: version 7.0' minos.txt || { echo "::error title=universal package::arm64 slice must target iOS 7.0"; exit 1; }
+          fail=0
+          for p in \
+              /Library/MobileSubstrate/DynamicLibraries/Unified.dylib \
+              /Library/MobileSubstrate/DynamicLibraries/Unified.plist \
+              /Library/PreferenceBundles/UnifiedPrefs.bundle/UnifiedPrefs \
+              /Library/PreferenceBundles/UnifiedPrefs.bundle/Info.plist \
+              /Library/PreferenceBundles/UnifiedPrefs.bundle/icon.png \
+              /Library/PreferenceLoader/Preferences/Unified.plist; do
+            [ -f "/tmp/deb$p" ] || { echo "::error title=package contents::missing $p"; fail=1; }
+          done
+          # Each Mach-O must have exactly: armv7 at iOS 5.0 and arm64 at iOS 7.0.
+          python3 - <<'EOF' || fail=1
+          import sys
+          files, current = {}, None
+          for line in open("minos.txt"):
+              if not line.startswith("  "):
+                  current = line.strip(); files[current] = []
+              else:
+                  files[current].append(line.strip())
+          bad = False
+          for name, slices in files.items():
+              if sorted(slices) != ["arm64: version 7.0", "armv7: version 5.0"]:
+                  print(f"::error title=universal package::{name}: {slices}")
+                  bad = True
+          if not files:
+              print("::error title=universal package::no Mach-O files found"); bad = True
+          sys.exit(1 if bad else 0)
+          EOF
+          exit $fail

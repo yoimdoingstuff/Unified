@@ -1,9 +1,9 @@
 Package: com.yoimdoingstuff.unified
 Name: Unified
-Version: 0.0.1~poc1
+Version: 0.0.2
 Architecture: iphoneos-arm
-Description: Experimental. Adapts iPhone apps to iPad displays (and later the reverse). Phase 1 skeleton: no visible changes yet.
+Description: Experimental. Adapts iPhone apps to iPad displays (and later the reverse). Settings > Unified lets you pick apps and modes; display adaptation itself is not implemented yet.
 Maintainer: yoimdoingstuff
 Author: yoimdoingstuff
 Section: Tweaks
-Depends: mobilesubstrate
+Depends: mobilesubstrate, preferenceloader

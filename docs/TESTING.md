@@ -16,9 +16,27 @@ Test Fit, Fill, and Stretch independently from UIKit:
 - Expected scale and translation.
 - Forward/inverse transform round trips.
 
-## First device test: Phase 1 skeleton
+## Preferences unit tests
 
-Goal: show the tweak loads only where enabled and changes nothing. Not run yet.
+`tests/test_preferences.m` covers `UNPreferences` and the UIDeviceFamily parser in `UNAppCatalog`: missing, malformed and wrong-type files load as "off"; save/reload round trip in the documented format; validation of modes and bundle IDs; unknown keys preserved. It needs Foundation, so it runs only on macOS (the macOS `host-tests` CI job).
+
+## Device test: Settings pane (no SSH needed)
+
+Goal: show the pane works and saves settings. Not run yet.
+
+1. Install the package from Cydia. It now depends on PreferenceLoader; Cydia will offer to install it.
+2. Open Settings. Expected: a **Unified** row with a blue icon. Settings does not crash.
+3. Open it. Expected: an Enabled switch, Default mode (Fit), Choose Apps (None), and a Status note.
+4. Choose Apps. Expected: on an iPad, an "iPhone apps" section listing installed iPhone-only App Store apps by name, then "Other apps".
+5. Open one app, switch **Use Unified** on, and set Mode to Fill. Go back. Expected: the app's row shows "On, Fill" and the root page shows "1 on".
+6. Leave Settings completely (close it from the app switcher), reopen it. Expected: all values are still set.
+7. Switch the master **Enabled** off and on. Expected: it stays as set after reopening.
+
+Record the device, iOS version, and anything that differs from the expected results.
+
+## First device test: Phase 1 skeleton (needs the device log)
+
+Goal: show the tweak loads only where enabled and changes nothing. Not run yet. Settings can now be changed in the pane instead of copying the example file.
 
 1. Install the package. Reboot or respring if prompted.
 2. With **no** preferences file, open several apps and Settings. Expected: no `[Unified]` log lines, no behaviour change.

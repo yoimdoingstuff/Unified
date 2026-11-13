@@ -53,6 +53,7 @@ Changing reported screen dimensions or spoofing device identity alone is not suf
 - [Testing strategy](docs/TESTING.md)
 - [Compatibility research](docs/COMPATIBILITY.md)
 - [Security and privacy](docs/SECURITY.md)
+- [Private APIs and dependencies](docs/PRIVATE_APIS.md)
 - [Agent instructions](AGENTS.md)
 - [Contributing](CONTRIBUTING.md)
 
@@ -64,7 +65,9 @@ Changing reported screen dimensions or spoofing device identity alone is not suf
 | --- | --- |
 | Geometry engine (`Sources/UNGeometry.*`): Fit / Fill / Stretch transforms, inverse mapping for input, visible-region calculation | **Implemented; host unit tests pass in CI** (gcc/clang, Linux/macOS, with sanitizers). Plain C99, no UIKit. Not yet integrated with UIKit or tested on iOS. |
 | Process/config policy (`Sources/UNPolicy.*`): eligibility, global + per-app opt-in, mode selection | **Implemented; host unit tests pass in CI.** Not run on a device. |
-| Theos skeleton (`Tweak.x`, `Makefile`, `control`, `Unified.plist`) | **Builds in CI as one universal package** (armv7 iOS 5.0+, arm64 iOS 7.0+, both checked automatically). Not installed on a device yet. Reads preferences and logs one line in explicitly enabled apps. No hooks; changes nothing. |
+| Theos skeleton (`Tweak.x`, `Makefile`, `control`, `Unified.plist`) | **Builds in CI as one universal package** (armv7 iOS 5.0+, arm64 iOS 7.0+, both checked automatically). **Installs via Cydia** on iPad mini 1st gen, iOS 8.4.1 (owner report). Loading into apps not yet observed. Reads settings and logs one line in explicitly enabled apps. No hooks; changes nothing. |
+| Settings pane (`prefs/`, `Settings > Unified`) | **Implemented, builds in CI, not yet tried on a device.** Global switch, default mode, an app list grouped by iPhone/iPad/universal, and a per-app switch and mode. Needs PreferenceLoader. Uses private APIs listed in [docs/PRIVATE_APIS.md](docs/PRIVATE_APIS.md). |
+| Settings model (`Sources/UNPreferences.*`) | **Implemented; host tests run on macOS in CI.** Shared by the tweak and the pane. |
 | Rendering and touch integration | **Not started.** |
 | Upscaling, HD texture packs | **Planned** (ROADMAP Phases 3a and 3b). Not started. |
 

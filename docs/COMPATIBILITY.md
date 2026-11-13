@@ -17,7 +17,7 @@ The first proof of concept targets **one** version, device, and jailbreak from i
 | Device | iPad mini (1st generation), Wi-Fi + Cellular, 64 GB: A5, **armv7**, 1024×768 points at 1x (non-Retina), 512 MB RAM | Owner-reported. The cellular radio and storage size are not expected to matter |
 | iOS | 8.4.1 | Owner-reported |
 | Jailbreak | EverPwnage, untether from LukeZGD's repo | Owner-reported. Exact versions are not needed unless a jailbreak-specific problem appears |
-| Injection platform | Cydia Substrate (probable) | Not confirmed. If the first test tweak doesn't load, check this first (look for "Cydia Substrate" or "MobileSubstrate" in Cydia's installed list) |
+| Injection platform | Cydia Substrate | Confirmed present: Cydia installed Unified 0.0.1~poc1, which depends on `mobilesubstrate`. That the tweak actually loads into apps is not yet observed |
 | Scaling direction | iPhone app → iPad display (the only direction this device can test) | — |
 
 Why this target is convenient:
@@ -77,7 +77,7 @@ Tweaks in this era generally load through Cydia Substrate (MobileSubstrate), or 
 | 5.x | armv7 | Not selected | Not selected | Not tested | Not tested |
 | 6.x | armv7 / armv7s | Not selected | Not selected | Not tested | Not tested |
 | 7.x | armv7 / armv7s / arm64 | Not selected | Not selected | Not tested | Not tested |
-| **8.4.1 (first PoC)** | iPad mini 1st gen, armv7 | EverPwnage | Cydia Substrate (to confirm) | Build-tested (CI) | Not tested |
+| **8.4.1 (first PoC)** | iPad mini 1st gen, armv7 | EverPwnage | Cydia Substrate (present: Cydia installed a package depending on it) | Build-tested (CI) | Install-tested: 0.0.1~poc1 installs via Cydia. Loading into apps not observed. |
 | 8.x (other) | armv7 / armv7s / arm64 | Not selected | Not selected | Not tested | Not tested |
 | 9.x | armv7 / armv7s / arm64 | Not selected | Not selected | Not tested | Not tested |
 | 10.x | armv7s / arm64 | Not selected | Not selected | Not tested | Not tested |

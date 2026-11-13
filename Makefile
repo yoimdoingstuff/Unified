@@ -33,8 +33,13 @@ include $(THEOS)/makefiles/common.mk
 
 TWEAK_NAME = Unified
 
-Unified_FILES = Tweak.x Sources/UNGeometry.c Sources/UNPolicy.c
+Unified_FILES = Tweak.x Sources/UNGeometry.c Sources/UNPolicy.c Sources/UNPreferences.m
 Unified_CFLAGS = -ISources -Wall -Wextra -Wunguarded-availability
 Unified_FRAMEWORKS = Foundation
 
 include $(THEOS_MAKE_PATH)/tweak.mk
+
+# Settings > Unified pane (needs PreferenceLoader on the device; its entry
+# plist ships from layout/Library/PreferenceLoader/Preferences/).
+SUBPROJECTS += prefs
+include $(THEOS_MAKE_PATH)/aggregate.mk

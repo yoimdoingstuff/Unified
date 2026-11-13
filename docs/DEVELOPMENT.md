@@ -2,12 +2,15 @@
 
 ## Current state
 
-What exists (nothing has run on a device yet):
+What exists (the package installs on the test iPad; nothing has been observed running yet):
 - `Sources/UNGeometry.{h,c}`: plain C99 geometry engine. Host tests pass in CI.
 - `Sources/UNPolicy.{h,c}`: plain C99 process eligibility and per-app enable/mode decision. Host tests pass in CI.
+- `Sources/UNPreferences.{h,m}`: reads and writes the settings file. Shared by the tweak and the Settings pane. Host-tested on macOS.
+- `Sources/UNAppCatalog.{h,m}`: installed-app list for the pane (private APIs, see [PRIVATE_APIS.md](PRIVATE_APIS.md)).
 - `Tweak.x`, `Makefile`, `control`, `Unified.plist`: Phase 1 Theos skeleton. It logs one line in apps that are explicitly enabled and changes nothing. Builds in CI.
-- `tests/`: host unit tests for both C modules.
-- `Resources/example-preferences.plist`: a preferences file for testing by hand.
+- `prefs/`: the `Settings > Unified` pane (Theos bundle subproject, loaded by PreferenceLoader). The PreferenceLoader entry plist is in `layout/Library/PreferenceLoader/Preferences/`.
+- `tests/`: host unit tests (C on Linux and macOS; Objective-C on macOS only).
+- `Resources/example-preferences.plist`: a preferences file for testing by hand, without the pane.
 
 ## Host unit tests
 
@@ -85,7 +88,11 @@ CI already builds the package. To build locally instead:
     ├── Tweak.x                Entry point (%ctor), reads preferences
     ├── Sources/
     │   ├── UNGeometry.*       Fit / Fill / Stretch, inverse mapping
-    │   └── UNPolicy.*         Eligibility and enable/mode decision
+    │   ├── UNPolicy.*         Eligibility and enable/mode decision
+    │   ├── UNPreferences.*    Settings file read/write (tweak + pane)
+    │   └── UNAppCatalog.*     Installed-app list for the pane
+    ├── prefs/                 Settings > Unified (PreferenceLoader bundle)
+    ├── layout/                Files copied into the package as-is
     ├── Resources/             Example preferences
     ├── tools/                 Build helpers (macho_minos.py: per-slice min iOS)
     ├── docs/
@@ -100,7 +107,7 @@ Or download the `unified-deb` artifact from a CI run (you need to be signed in t
 
 ## Turning it on for one app
 
-There is no Settings pane yet. Copy `Resources/example-preferences.plist` to `/var/mobile/Library/Preferences/com.yoimdoingstuff.unified.plist` on the iPad and replace `com.example.someapp` with the target app's bundle ID. Format:
+Use `Settings > Unified` (needs PreferenceLoader). Without the pane, copy `Resources/example-preferences.plist` to `/var/mobile/Library/Preferences/com.yoimdoingstuff.unified.plist` and replace `com.example.someapp` with the target app's bundle ID. Both write the same format, handled by `Sources/UNPreferences.m`:
 
 | Key | Type | Meaning |
 | --- | --- | --- |
@@ -112,7 +119,7 @@ There is no Settings pane yet. Copy `Resources/example-preferences.plist` to `/v
 ## Turning it off / recovery
 
 In order of preference:
-1. Set `Enabled` to `false`, or delete the preferences file, then relaunch the app.
+1. Switch off `Settings > Unified > Enabled` (or the app's own switch), then close and reopen the app. Without the pane: set `Enabled` to `false` in the file, or delete it.
 2. Uninstall the package (Cydia, or `dpkg -r com.yoimdoingstuff.unified`).
 3. Substrate safe mode, if the device misbehaves at boot.
 

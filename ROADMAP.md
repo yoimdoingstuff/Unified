@@ -5,10 +5,9 @@ Unified is in **planning / research**. These milestones are goals, not claims of
 ## Phase 0 - Definition and research
 - [x] Choose the overall supported range: iOS 5–10 (armv7, armv7s, arm64).
 - [x] Choose the first proof-of-concept target: iPad mini (1st gen, cellular, armv7), iOS 8.4.1, EverPwnage jailbreak. *(See docs/COMPATIBILITY.md.)*
-- [ ] Confirm Cydia Substrate is the injection platform (checked implicitly when the first test tweak loads).
-- [ ] Choose a toolchain/SDK that builds armv7 (iOS 5.0 deployment target) and arm64.
+- [x] Confirm Cydia Substrate is present on the test device. *(Cydia installed Unified, which depends on `mobilesubstrate`.)*
+- [x] Choose a toolchain/SDK that builds armv7 (iOS 5.0 deployment target) and arm64. *(docs/DEVELOPMENT.md)*
 - [ ] Research where iOS applies iPhone-on-iPad compatibility scaling, and the install-time block on iPad-only apps on iPhone.
-- [ ] Choose the first jailbreak and injection environment.
 - [x] Confirm Theos toolchain support. *(Theos + L1ghtmann Linux toolchain + iPhoneOS 10.3 SDK builds armv7 in CI; see docs/DEVELOPMENT.md.)*
 - [x] Confirm the single universal package builds. *(Verified on 8304012: one dylib, armv7 with a minimum of iOS 5.0 and arm64 with a minimum of iOS 7.0; CI checks both on every build.)*
 - [ ] Research UIKit geometry, trait collections, screen modes, and Core Animation on the target OS.
@@ -19,9 +18,9 @@ Unified is in **planning / research**. These milestones are goals, not claims of
 ## Phase 1 - Safe tweak skeleton
 - [x] Create Theos project and package metadata. *(Builds in CI.)*
 - [ ] Add process filtering and bundle identification. *(Written: `UNPolicy.c` + `Tweak.x`; untested on device.)*
-- [ ] Add configuration parsing with safe defaults. *(Written; untested on device.)*
-- [ ] Add global disable and per-app opt-in. *(Written; untested on device.)*
-- [ ] Verify install, disable, removal, and recovery.
+- [ ] Add configuration parsing with safe defaults. *(`UNPreferences`; host-tested on macOS, untested on device.)*
+- [ ] Add global disable and per-app opt-in. *(Written, now switchable from Settings; untested on device.)*
+- [ ] Verify install, disable, removal, and recovery. *(Install via Cydia works on iPad mini / iOS 8.4.1; the rest is untested.)*
 
 **Exit:** tweak loads without changing app geometry and does not affect unrelated processes.
 
@@ -72,10 +71,13 @@ Goal: let users supply higher-resolution replacement images for a specific app, 
 **Exit:** one documented UIKit app shows replaced images at the correct size with no layout change, and disabling the pack restores the originals.
 
 ## Phase 4 - Configuration and usability
-- [ ] Add a target-appropriate Settings interface.
-- [ ] Add global default mode and per-app mode selection.
-- [ ] Add per-app enable/disable and reset controls.
-- [ ] Explain compatibility warnings.
+
+Pulled forward at the owner's request so settings can be changed without SSH.
+
+- [ ] Add a target-appropriate Settings interface. *(`Settings > Unified` via PreferenceLoader; builds, not yet seen on a device.)*
+- [ ] Add global default mode and per-app mode selection. *(Implemented; not device-tested.)*
+- [ ] Add per-app enable/disable and reset controls. *(Per-app switch done; a "reset all" control is not implemented.)*
+- [ ] Explain compatibility warnings. *(The app list groups apps by the device they were made for; no per-app warnings yet.)*
 
 ## Phase 5 - Compatibility and release
 - [ ] Expand device and iOS compatibility matrix.
