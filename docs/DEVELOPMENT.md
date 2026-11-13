@@ -31,7 +31,7 @@ The `ci` GitHub Actions workflow (`.github/workflows/ci.yml`) has two jobs:
 | Host | GitHub Actions `ubuntu-22.04` | |
 | Theos | `theos/theos` master, commit `8167f59` (2026-11-13) | CI clones master, so the commit can change; it is reported in each run's annotations. |
 | Toolchain | L1ghtmann `iOSToolchain-x86_64`, clang 11.1.0 | Latest release at build time. |
-| SDK | `theos/sdks` `iPhoneOS10.3.sdk` | Contains armv7 stubs. **`iPhoneOS9.3.sdk` does not link armv7:** its `libSystem.tbd` re-exports `liblaunch.dylib`, but `liblaunch.tbd` is missing from that SDK. |
+| SDK | `theos/sdks` `iPhoneOS10.3.sdk`, patched by `tools/patch_sdk_armv7.py` | Contains armv7 stubs, but its `libobjc.A.tbd` omits the armv7-only `_objc_msgSend_stret`, `_objc_msgSendSuper_stret` and `_objc_msgSendSuper2_stret`, which every struct-returning Objective-C call (e.g. `-[UIView frame]`) needs on 32-bit ARM. The script adds an armv7/armv7s export section for them; it only edits that text stub. **`iPhoneOS9.3.sdk` does not link armv7:** its `libSystem.tbd` re-exports `liblaunch.dylib`, but `liblaunch.tbd` is missing from that SDK. |
 
 Build history:
 - `87a2f5f`: first successful build, armv7 only, deployment target 8.0.
@@ -39,6 +39,7 @@ Build history:
 - `f4fbde9`: build failed. Adding `-miphoneos-version-min=7.0` for arm64 conflicts with Theos's own `-target arm64-apple-ios5.0` (clang error `-Woverriding-t-option`).
 - `c77d707`: the Makefile switched to Theos's per-architecture variables (`TARGET_OS_DEPLOYMENT_VERSION` = 5.0, `TARGET_OS_DEPLOYMENT_VERSION_arm64` = 7.0) and left the version out of `TARGET`, which would otherwise take precedence. The CI check still reported arm64 at 5.0, but that was a misreading by `llvm-objdump --arch-name`.
 - `8304012`: **universal package verified in CI.** clang received `-target armv7-apple-ios5.0` and `-target arm64-apple-ios7.0`. `tools/macho_minos.py` reads the final dylib's slices directly as armv7 5.0 and arm64 7.0. CI's "Check universal package" step now uses that script and fails unless those values match.
+- `a2223a6` / `0e5714f` (Settings pane): fixed two mismatches with Theos's Preferences headers (`specifiers` is `NSMutableArray`; `setValues:titles:` undeclared). armv7 then failed to link with `Undefined symbols: _objc_msgSend_stret`, the first struct-returning Objective-C call. Cause: the SDK stub omits armv7-only libobjc exports. Fixed by `tools/patch_sdk_armv7.py`.
 - The linker warns `building for iOS 5.0.0 is deprecated`. That is expected and harmless.
 
 `tests/Makefile` is deliberately separate from the Theos root `Makefile` so host tests never need the iOS SDK.
@@ -76,7 +77,7 @@ CI already builds the package. To build locally instead:
 
 1. Install Theos using its official documentation (macOS or Linux; on Windows use WSL).
 2. On Linux, install the L1ghtmann iOS toolchain into `$THEOS/toolchain`, the same way `ci.yml` does.
-3. Copy `iPhoneOS10.3.sdk` from `theos/sdks` into `$THEOS/sdks`.
+3. Copy `iPhoneOS10.3.sdk` from `theos/sdks` into `$THEOS/sdks`, then run `python3 tools/patch_sdk_armv7.py $THEOS/sdks/iPhoneOS10.3.sdk`.
 4. Run `make package`.
 
 ## Layout
@@ -94,7 +95,8 @@ CI already builds the package. To build locally instead:
     ├── prefs/                 Settings > Unified (PreferenceLoader bundle)
     ├── layout/                Files copied into the package as-is
     ├── Resources/             Example preferences
-    ├── tools/                 Build helpers (macho_minos.py: per-slice min iOS)
+    ├── tools/                 Build helpers (macho_minos.py: per-slice min iOS;
+    │                          patch_sdk_armv7.py: missing armv7 libobjc exports)
     ├── docs/
     └── tests/                 Host unit tests (separate Makefile)
 

@@ -77,6 +77,11 @@ jobs:
           git -C /tmp/sdks sparse-checkout set "iPhoneOS$SDK.sdk"
           mkdir -p "$THEOS/sdks"
           cp -R "/tmp/sdks/iPhoneOS$SDK.sdk" "$THEOS/sdks/"
+          # The trimmed SDK's libobjc stub lacks armv7-only exports such as
+          # _objc_msgSend_stret; see tools/patch_sdk_armv7.py.
+          r=$(python3 Unified/tools/patch_sdk_armv7.py "$THEOS/sdks/iPhoneOS$SDK.sdk")
+          echo "$r"
+          echo "::notice title=SDK patch::$r"
 
       - name: Record tool versions
         # Job logs need a GitHub sign-in; annotations are public, so report there.

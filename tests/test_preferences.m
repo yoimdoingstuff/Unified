@@ -14,13 +14,16 @@
 static int gChecks = 0;
 static int gFailures = 0;
 
-#define CHECK(cond)                                                              \
+/* Variadic because Objective-C message sends contain commas the
+ * preprocessor would otherwise treat as argument separators
+ * (e.g. [NSArray arrayWithObjects:a, b, nil]). */
+#define CHECK(...)                                                               \
     do {                                                                         \
         gChecks++;                                                               \
-        if (!(cond)) {                                                           \
+        if (!(__VA_ARGS__)) {                                                    \
             gFailures++;                                                         \
             fprintf(stderr, "%s:%d: CHECK failed: %s\n", __FILE__, __LINE__,     \
-                    #cond);                                                      \
+                    #__VA_ARGS__);                                               \
         }                                                                        \
     } while (0)
 
