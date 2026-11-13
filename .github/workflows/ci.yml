@@ -35,9 +35,15 @@ jobs:
 
   tweak-build:
     # Linux: the Theos Linux toolchain still links armv7; recent Xcode does not.
+    # Two SDKs are tried side by side until one is confirmed to link armv7.
+    strategy:
+      fail-fast: false
+      matrix:
+        sdk: ["9.3", "10.3"]
     runs-on: ubuntu-22.04
     env:
       THEOS: ${{ github.workspace }}/theos
+      SDK: ${{ matrix.sdk }}
     steps:
       - uses: actions/checkout@v5
         with:
@@ -59,12 +65,20 @@ jobs:
           # Logs need a GitHub sign-in; annotations are public, so report layout there.
           echo "::notice title=toolchain layout::$(find "$THEOS/toolchain" -maxdepth 4 -type d | sed "s#$THEOS/##" | head -n 20 | tr '\n' ' ')"
 
-      - name: Install iPhoneOS 9.3 SDK
+      - name: Install iPhoneOS SDK
         run: |
           git clone --depth 1 --filter=blob:none --sparse https://github.com/theos/sdks.git /tmp/sdks
-          git -C /tmp/sdks sparse-checkout set iPhoneOS9.3.sdk
+          git -C /tmp/sdks sparse-checkout set "iPhoneOS$SDK.sdk"
           mkdir -p "$THEOS/sdks"
-          cp -R /tmp/sdks/iPhoneOS9.3.sdk "$THEOS/sdks/"
+          cp -R "/tmp/sdks/iPhoneOS$SDK.sdk" "$THEOS/sdks/"
+
+      - name: Inspect SDK stubs
+        continue-on-error: true
+        run: |
+          set +e
+          S="$THEOS/sdks/iPhoneOS$SDK.sdk"
+          echo "::notice title=SDK $SDK usr/lib/system::$(ls "$S/usr/lib/system" 2>&1 | tr '\n' ' ')"
+          echo "::notice title=SDK $SDK libSystem.tbd header::$(head -n 12 "$S/usr/lib/libSystem.tbd" 2>&1 | tr '\n' ' ')"
 
       - name: Record tool versions
         # Diagnostics only; never fails the job. Results go to public annotations.
@@ -87,7 +101,7 @@ jobs:
         working-directory: Unified
         run: |
           set -o pipefail
-          make package FINALPACKAGE=1 2>&1 | tee build.log
+          make package FINALPACKAGE=1 TARGET="iphone:clang:$SDK:8.0" 2>&1 | tee build.log
 
       - name: Report build failure
         if: failure()
@@ -99,8 +113,8 @@ jobs:
           # SDK stubs so the real error fits. %0A is a newline in a message.
           sed -e 's/\x1b\[[0-9;]*m//g' -e 's/\r//g' build.log \
             | grep -v "but linking in .tbd file" > build.filtered.log || true
-          echo "::error title=build log (filtered, last 40 lines)::$(tail -n 40 build.filtered.log | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
-          echo "::error title=build log (error lines)::$(grep -inE 'error|undefined|not found|unknown|unsupported' build.filtered.log | tail -n 25 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          echo "::error title=SDK $SDK build log (filtered, last 40 lines)::$(tail -n 40 build.filtered.log | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
+          echo "::error title=SDK $SDK build log (error lines)::$(grep -inE 'error|undefined|not found|unknown|unsupported' build.filtered.log | tail -n 25 | sed -e 's/%/%25/g' | awk 'BEGIN{ORS="%0A"}{print}')"
 
       - name: Show package contents
         working-directory: Unified
@@ -111,5 +125,5 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: unified-deb
+          name: unified-deb-sdk${{ matrix.sdk }}
           path: Unified/packages/*.deb

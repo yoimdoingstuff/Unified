@@ -14,7 +14,7 @@ Keep this list synchronized with [ROADMAP.md](ROADMAP.md).
 - [ ] Run the Phase 1 device test in docs/TESTING.md.
 - [x] Add geometry tests for Fit, Fill, and Stretch. *(`tests/test_geometry.c`)*
 - [x] Confirm host tests pass in the `ci` workflow's `host-tests` job. *(Passed 2026-11-13 on commit 43d9b9a: gcc and clang on ubuntu-latest, clang on macos-latest, each with and without ASan/UBSan.)*
-- [ ] Get the `tweak-build` CI job passing. *(First run failed in the diagnostics step with exit 127, before the build ran.)*
+- [ ] Get the `tweak-build` CI job passing. *(As of c185b89 all sources compile for armv7 with L1ghtmann clang 11.1.0 + Theos 8167f59. Linking against the theos/sdks iPhoneOS 9.3 SDK fails: `ld: file not found: /usr/lib/system/liblaunch.dylib for architecture armv7`. CI now tries the 9.3 and 10.3 SDKs side by side.)*
 - [ ] Select a simple app for the first rendering experiment.
 
 ## Technical investigation
